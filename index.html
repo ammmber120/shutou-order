@@ -91,6 +91,9 @@
     .orderCard{background:white;border:1px solid var(--line);border-radius:26px;padding:14px;box-shadow:0 5px 14px rgba(28,25,23,.04);display:flex;flex-direction:column;gap:10px}
     .orderTop{display:flex;justify-content:space-between;gap:12px}
     .tableBadge{display:inline-flex;background:var(--dark);color:white;border-radius:999px;padding:6px 12px;font-weight:950;font-size:14px}
+    .stationBadge{display:inline-flex;background:#fff1f2;color:var(--main);border:1px solid #fecdd3;border-radius:999px;padding:6px 10px;font-weight:950;font-size:13px;margin-left:5px}
+    .stationFilters{display:flex;gap:8px;overflow:auto;margin:8px -2px 12px;padding:2px}
+    .stationFilters::-webkit-scrollbar{display:none}
     .meta{font-size:12px;color:var(--muted);font-weight:700;margin-top:5px}
     .orderTotal{font-size:18px;color:var(--main);font-weight:950}
     .orderItems{background:#faf7f1;border-radius:16px;padding:10px}
@@ -169,6 +172,12 @@
             <input class="input" id="quickName" placeholder="例如：客製酒款" />
             <input class="input" id="quickPrice" placeholder="金額" inputmode="numeric" />
           </div>
+          <div style="height:8px"></div>
+          <select class="input" id="quickStation" aria-label="臨時加點出單位置">
+            <option value="吧檯單">吧檯單</option>
+            <option value="烤台單">烤台單</option>
+            <option value="飲料單">飲料單</option>
+          </select>
           <div style="height:10px"></div>
           <button class="primary" id="quickSubmit">直接送出臨時加點</button>
         </div>
@@ -226,7 +235,7 @@
   <div class="toast hidden" id="toast">已複製</div>
 
   <script>
-    const TABLES = ["A1","A2","A3","B1","B2","B3","C1","C2","吧台1","吧台2","吧台3","外帶"];
+    const TABLES = ["A1","A2","B1","B2","B3","B4","B5","B6","B7","B8","C1","C2"];
 
     const MENU = [
       {id:"kimchi",name:"韓式泡菜",category:"下酒菜",price:90},
@@ -380,6 +389,7 @@
       tab:"order",
       table:"A1",
       category:"全部",
+      stationFilter:"全部",
       keyword:"",
       cart:{},
       itemNotes:{},
@@ -391,7 +401,12 @@
     function load(){
       try{
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");
-        if(Array.isArray(saved.orders)) state.orders = saved.orders;
+        if(Array.isArray(saved.orders)) {
+          state.orders = saved.orders.map(o => ({
+            ...o,
+            station: o.station || stationOf(o.items?.[0] || {}) || "未分類"
+          }));
+        }
       }catch(e){}
     }
     function save(){
@@ -412,6 +427,16 @@
     function categories(){
       return ["全部", ...Array.from(new Set(MENU.map(i=>i.category)))];
     }
+    function stationOf(item){
+      const drinkCats = ["啤酒","日本燒酎","調酒沙瓦","日本果實酒","日本清酒","威士忌","威士忌蘇打","無酒精飲料","其他"];
+      const barCats = ["下酒菜","沙拉","名物主食","炸物","湯品"];
+      const barIds = ["beef-stew","butter-mushroom","sake-clams","seafood-miso-soup","tonkotsu-veggie-soup"];
+      const grillIds = ["fish-dried","hamachi-kama","salted-mackerel"];
+      if(drinkCats.includes(item.category)) return "飲料單";
+      if(barCats.includes(item.category) || barIds.includes(item.id)) return "吧檯單";
+      if((item.category || "").startsWith("串燒") || grillIds.includes(item.id)) return "烤台單";
+      return "吧檯單";
+    }
     function filteredMenu(){
       const k = state.keyword.trim().toLowerCase();
       return MENU.filter(i=>{
@@ -424,7 +449,7 @@
       return Object.entries(state.cart).map(([id,qty])=>{
         const item = MENU.find(i=>i.id===id);
         if(!item || qty<=0) return null;
-        return {...item, qty, note:(state.itemNotes[id]||"").trim(), subtotal:Number(item.price||0)*qty};
+        return {...item, qty, station:stationOf(item), note:(state.itemNotes[id]||"").trim(), subtotal:Number(item.price||0)*qty};
       }).filter(Boolean);
     }
     function cartTotal(){
@@ -469,6 +494,7 @@
       const lines = [];
       lines.push(`手刀串燒 點餐`);
       lines.push(`桌號：${order.tableNo}`);
+      lines.push(`單別：${order.station || "未分類"}`);
       lines.push(`單號：#${order.no}`);
       lines.push(`時間：${order.createdAt}`);
       lines.push(`---`);
@@ -495,17 +521,33 @@
     function submitOrder(){
       const items = cartItems();
       if(!items.length) return;
-      const order = {
-        id:"ORD-"+Date.now(),
-        no:orderNo(),
-        tableNo:state.table,
-        createdAt:nowLabel(),
-        items,
-        note:$("orderNote").value.trim(),
-        total:cartTotal(),
-        status:"pending"
-      };
-      state.orders.unshift(order);
+      const note = $("orderNote").value.trim();
+      const no = orderNo();
+      const createdAt = nowLabel();
+      const stationOrder = ["烤台單","吧檯單","飲料單"];
+      const groups = {};
+      items.forEach(item => {
+        const station = item.station || stationOf(item);
+        if(!groups[station]) groups[station] = [];
+        groups[station].push(item);
+      });
+      const newOrders = stationOrder
+        .filter(station => groups[station]?.length)
+        .map((station, index) => {
+          const groupItems = groups[station];
+          return {
+            id:`ORD-${Date.now()}-${index}`,
+            no,
+            station,
+            tableNo:state.table,
+            createdAt,
+            items:groupItems,
+            note,
+            total:groupItems.reduce((sum,item)=>sum+Number(item.subtotal||0),0),
+            status:"pending"
+          };
+        });
+      state.orders = [...newOrders, ...state.orders];
       state.cart={};
       state.itemNotes={};
       $("orderNote").value="";
@@ -515,11 +557,13 @@
     function quickSubmit(){
       const name = $("quickName").value.trim();
       const price = Number(($("quickPrice").value||"").replace(/[^0-9]/g,"")) || 0;
+      const station = $("quickStation")?.value || "吧檯單";
       if(!name){showToast("請輸入品項");return}
-      const item = {id:"custom-"+Date.now(), name, category:"臨時加點", price, qty:1, note:"", subtotal:price};
+      const item = {id:"custom-"+Date.now(), name, category:"臨時加點", station, price, qty:1, note:"", subtotal:price};
       const order = {
         id:"Q-"+Date.now(),
         no:orderNo(),
+        station,
         tableNo:state.table,
         createdAt:nowLabel(),
         items:[item],
@@ -612,12 +656,13 @@
     }
     function renderOrders(){
       const pending = pendingOrders();
+      const shownPending = state.stationFilter === "全部" ? pending : pending.filter(o => (o.station || "未分類") === state.stationFilter);
       const done = doneOrders();
       $("pendingCount").textContent = pending.length;
       $("navBadge").textContent = pending.length;
       $("navBadge").classList.toggle("hidden", pending.length===0);
 
-      $("pagePending").innerHTML = renderOrderPage("未出餐訂單", pending, false);
+      $("pagePending").innerHTML = renderOrderPage("未出餐訂單", shownPending, false, pending);
       $("pageHistory").innerHTML = `
         <div class="toolbar">
           <div><h2>已完成紀錄</h2><div class="hint">當日收尾可清空</div></div>
@@ -626,6 +671,12 @@
         ${renderOrderCards(done, true)}
       `;
 
+      document.querySelectorAll("[data-station-filter]").forEach(b=>{
+        b.onclick=()=>{
+          state.stationFilter=b.dataset.stationFilter;
+          renderOrders();
+        };
+      });
       document.querySelectorAll("[data-done]").forEach(b=>b.onclick=()=>markDone(b.dataset.done));
       document.querySelectorAll("[data-restore]").forEach(b=>b.onclick=()=>restoreOrder(b.dataset.restore));
       document.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>deleteOrder(b.dataset.delete));
@@ -633,11 +684,28 @@
       const clear = $("clearAll");
       if(clear) clear.onclick=clearAllOrders;
     }
-    function renderOrderPage(title, orders, history){
+    function stationCount(orders, station){
+      if(station === "全部") return orders.length;
+      return orders.filter(o => (o.station || "未分類") === station).length;
+    }
+    function renderStationFilters(allPending){
+      const filters = ["全部","烤台單","吧檯單","飲料單"];
+      return `
+        <div class="stationFilters">
+          ${filters.map(f=>`
+            <button class="pill ${state.stationFilter===f?'active':''}" data-station-filter="${f}">
+              ${f} ${stationCount(allPending, f)}
+            </button>
+          `).join("")}
+        </div>
+      `;
+    }
+    function renderOrderPage(title, orders, history, allPending = orders){
       return `
         <div class="toolbar">
-          <div><h2>${title}</h2><div class="hint">可複製訂單傳到 LINE / 群組</div></div>
+          <div><h2>${title}</h2><div class="hint">已依烤台 / 吧檯 / 飲料自動分單</div></div>
         </div>
+        ${renderStationFilters(allPending)}
         ${renderOrderCards(orders, history)}
       `;
     }
@@ -649,7 +717,7 @@
         <div class="orderCard">
           <div class="orderTop">
             <div>
-              <span class="tableBadge">${order.tableNo}</span>
+              <span class="tableBadge">${order.tableNo}</span><span class="stationBadge">${order.station || "未分類"}</span>
               <div class="meta">#${order.no}｜建立：${order.createdAt}${order.doneAt ? "｜完成："+order.doneAt : ""}</div>
             </div>
             <div class="orderTotal">${money(order.total)}</div>
