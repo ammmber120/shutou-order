@@ -84,12 +84,6 @@
     .qtyNum{width:28px;text-align:center;font-size:20px;font-weight:950}
     .itemNote{margin-top:10px}
     .itemNote input{width:100%;border:1px solid var(--line);background:#faf7f1;border-radius:15px;padding:11px;outline:none;font-size:14px}
-    .variantBox{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .variantBtn{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f5f1ea;border:1px solid var(--line);border-radius:16px;padding:11px 12px;font-weight:950;color:#44403c}
-    .variantBtn b{font-size:14px}
-    .variantBtn span{font-size:13px;color:var(--main)}
-    .variantHint{margin-top:8px;font-size:12px;color:var(--muted);font-weight:800}
-
     .cartFab{position:fixed;right:max(14px,calc((100vw - 520px)/2 + 14px));bottom:84px;z-index:35;display:flex;align-items:center;gap:8px;background:var(--main);color:white;border-radius:999px;padding:10px 12px;box-shadow:0 12px 28px rgba(28,25,23,.22);font-weight:950}
     .cartFabIcon{font-size:18px;line-height:1}
     .cartFabCount{display:grid;place-items:center;min-width:24px;height:24px;border-radius:999px;background:white;color:var(--main);font-size:13px;padding:0 6px}
@@ -353,15 +347,23 @@
       {id:"ale-m",name:"艾爾－中",category:"啤酒",price:150},
       {id:"ale-l",name:"艾爾－特大",category:"啤酒",price:250},
 
-      {id:"tantakatan",name:"北海道 鍛高譚紫蘇燒酎",category:"日本燒酎",price:0,variants:[{id:"tantakatan-glass",label:"杯",price:150},{id:"tantakatan-bottle",label:"瓶",price:1500}]},
-      {id:"kannoko",name:"鹿兒島 神之河 麥燒酎",category:"日本燒酎",price:0,variants:[{id:"kannoko-glass",label:"杯",price:140},{id:"kannoko-bottle",label:"瓶",price:1400}]},
-      {id:"dorogame-pink",name:"長崎縣 泥龜 芋燒酎",category:"日本燒酎",price:0,variants:[{id:"dorogame-pink-glass",label:"杯",price:150},{id:"dorogame-pink-bottle",label:"瓶",price:1500}]},
-      {id:"dorogame-mugi",name:"長崎縣 泥龜 麥燒酎",category:"日本燒酎",price:0,variants:[{id:"dorogame-mugi-glass",label:"杯",price:150},{id:"dorogame-mugi-bottle",label:"瓶",price:1500}]},
+      {id:"tantakatan-glass",name:"北海道 鍛高譚紫蘇燒酎－杯",category:"日本燒酎",price:150},
+      {id:"tantakatan-bottle",name:"北海道 鍛高譚紫蘇燒酎－瓶",category:"日本燒酎",price:1500},
+      {id:"kannoko-glass",name:"鹿兒島 神之河 麥燒酎－杯",category:"日本燒酎",price:140},
+      {id:"kannoko-bottle",name:"鹿兒島 神之河 麥燒酎－瓶",category:"日本燒酎",price:1400},
+      {id:"dorogame-pink-glass",name:"長崎縣 泥龜 芋燒酎－杯",category:"日本燒酎",price:150},
+      {id:"dorogame-pink-bottle",name:"長崎縣 泥龜 芋燒酎－瓶",category:"日本燒酎",price:1500},
+      {id:"dorogame-mugi-glass",name:"長崎縣 泥龜 麥燒酎－杯",category:"日本燒酎",price:150},
+      {id:"dorogame-mugi-bottle",name:"長崎縣 泥龜 麥燒酎－瓶",category:"日本燒酎",price:1500},
       {id:"shochu-flight",name:"燒酎三種比（不可選）",category:"日本燒酎",price:400},
-      {id:"kuro-satsuma",name:"鹿兒島 黑薩摩 芋燒酎",category:"日本燒酎",price:0,variants:[{id:"kuro-satsuma-glass",label:"杯",price:180},{id:"kuro-satsuma-bottle",label:"瓶",price:1800}]},
-      {id:"aka-satsuma",name:"鹿兒島 赤薩摩 芋燒酎",category:"日本燒酎",price:0,variants:[{id:"aka-satsuma-glass",label:"杯",price:180},{id:"aka-satsuma-bottle",label:"瓶",price:1800}]},
-      {id:"ookubo",name:"鹿兒島 太久保 芋燒酎",category:"日本燒酎",price:0,variants:[{id:"ookubo-glass",label:"杯",price:180},{id:"ookubo-bottle",label:"瓶",price:1800}]},
-      {id:"beniotome",name:"福岡 紅乙女 芝麻燒酎",category:"日本燒酎",price:0,variants:[{id:"beniotome-glass",label:"杯",price:160},{id:"beniotome-bottle",label:"瓶",price:1600}]},
+      {id:"kuro-satsuma-glass",name:"鹿兒島 黑薩摩 芋燒酎－杯",category:"日本燒酎",price:180},
+      {id:"kuro-satsuma-bottle",name:"鹿兒島 黑薩摩 芋燒酎－瓶",category:"日本燒酎",price:1800},
+      {id:"aka-satsuma-glass",name:"鹿兒島 赤薩摩 芋燒酎－杯",category:"日本燒酎",price:180},
+      {id:"aka-satsuma-bottle",name:"鹿兒島 赤薩摩 芋燒酎－瓶",category:"日本燒酎",price:1800},
+      {id:"ookubo-glass",name:"鹿兒島 太久保 芋燒酎－杯",category:"日本燒酎",price:180},
+      {id:"ookubo-bottle",name:"鹿兒島 太久保 芋燒酎－瓶",category:"日本燒酎",price:1800},
+      {id:"beniotome-glass",name:"福岡 紅乙女 芝麻燒酎－杯",category:"日本燒酎",price:160},
+      {id:"beniotome-bottle",name:"福岡 紅乙女 芝麻燒酎－瓶",category:"日本燒酎",price:1600},
 
       {id:"gin-fizz",name:"琴費士（GIN FIZZ）",category:"調酒沙瓦",price:160},
       {id:"oolong-high",name:"烏龍茶燒酎",category:"調酒沙瓦",price:130},
@@ -378,14 +380,22 @@
       {id:"sake-glass",name:"日本清酒－單杯（請填酒款）",category:"日本清酒",price:0},
       {id:"sake-bottle",name:"日本清酒－瓶（請填酒款）",category:"日本清酒",price:0},
 
-      {id:"iwai",name:"岩井",category:"威士忌",price:0,variants:[{id:"iwai-glass",label:"杯",price:200},{id:"iwai-bottle",label:"瓶",price:1800}]},
-      {id:"fujimine",name:"富士嶺",category:"威士忌",price:0,variants:[{id:"fujimine-glass",label:"杯",price:230},{id:"fujimine-bottle",label:"瓶",price:2400}]},
-      {id:"asakura6",name:"朝倉6年",category:"威士忌",price:0,variants:[{id:"asakura6-glass",label:"杯",price:240},{id:"asakura6-bottle",label:"瓶",price:2500}]},
-      {id:"toki",name:"季",category:"威士忌",price:0,variants:[{id:"toki-glass",label:"杯",price:200},{id:"toki-bottle",label:"瓶",price:1800}]},
-      {id:"yamazaki",name:"山崎",category:"威士忌",price:0,variants:[{id:"yamazaki-glass",label:"杯",price:380},{id:"yamazaki-bottle",label:"瓶",price:4200}]},
-      {id:"hakushu",name:"白州",category:"威士忌",price:0,variants:[{id:"hakushu-glass",label:"杯",price:380},{id:"hakushu-bottle",label:"瓶",price:4200}]},
-      {id:"hibiki",name:"響",category:"威士忌",price:0,variants:[{id:"hibiki-glass",label:"杯",price:380},{id:"hibiki-bottle",label:"瓶",price:4200}]},
-      {id:"kaoru",name:"香薰",category:"威士忌",price:0,variants:[{id:"kaoru-glass",label:"杯",price:150},{id:"kaoru-bottle",label:"瓶",price:1400}]},
+      {id:"iwai-glass",name:"岩井－杯",category:"威士忌",price:200},
+      {id:"iwai-bottle",name:"岩井－瓶",category:"威士忌",price:1800},
+      {id:"fujimine-glass",name:"富士嶺－杯",category:"威士忌",price:230},
+      {id:"fujimine-bottle",name:"富士嶺－瓶",category:"威士忌",price:2400},
+      {id:"asakura6-glass",name:"朝倉6年－杯",category:"威士忌",price:240},
+      {id:"asakura6-bottle",name:"朝倉6年－瓶",category:"威士忌",price:2500},
+      {id:"toki-glass",name:"季－杯",category:"威士忌",price:200},
+      {id:"toki-bottle",name:"季－瓶",category:"威士忌",price:1800},
+      {id:"yamazaki-glass",name:"山崎－杯",category:"威士忌",price:380},
+      {id:"yamazaki-bottle",name:"山崎－瓶",category:"威士忌",price:4200},
+      {id:"hakushu-glass",name:"白州－杯",category:"威士忌",price:380},
+      {id:"hakushu-bottle",name:"白州－瓶",category:"威士忌",price:4200},
+      {id:"hibiki-glass",name:"響－杯",category:"威士忌",price:380},
+      {id:"hibiki-bottle",name:"響－瓶",category:"威士忌",price:4200},
+      {id:"kaoru-glass",name:"香薰－杯",category:"威士忌",price:150},
+      {id:"kaoru-bottle",name:"香薰－瓶",category:"威士忌",price:1400},
 
       {id:"yamazaki-highball",name:"山崎嗨",category:"威士忌蘇打",price:380},
       {id:"hakushu-highball",name:"白州嗨",category:"威士忌蘇打",price:380},
@@ -416,7 +426,6 @@
       keyword:"",
       cart:{},
       itemNotes:{},
-      expanded:{},
       orders:[]
     };
 
@@ -643,50 +652,25 @@
       $("menuTitle").textContent = state.category;
       $("menuCount").textContent = `共 ${list.length} 個品項`;
       $("menuList").innerHTML = list.map(item=>{
-        const hasVariants = Array.isArray(item.variants);
-        const qty = parentQty(item);
-        const expanded = !!state.expanded[item.id];
-        const priceText = hasVariants ? item.variants.map(v=>`${v.label}${money(v.price).replace("NT$","$")}`).join(" / ") : money(item.price);
+        const qty = state.cart[item.id]||0;
         return `
           <div class="item ${qty>0?'selected':''}">
             <div class="itemTop">
               <div class="itemInfo">
                 <div class="tag">${item.category}</div>
                 <div class="itemName">${item.name}</div>
-                <div class="price">${priceText}</div>
+                <div class="price">${money(item.price)}</div>
               </div>
-              ${hasVariants ? `
-                <div class="qty">
-                  <div class="qtyNum">${qty}</div>
-                  <button class="qtyBtn plus" data-expand="${item.id}">${expanded ? "−" : "+"}</button>
-                </div>
-              ` : `
-                <div class="qty">
-                  <button class="qtyBtn" data-minus="${item.id}">−</button>
-                  <div class="qtyNum">${qty}</div>
-                  <button class="qtyBtn plus" data-plus="${item.id}">+</button>
-                </div>
-              `}
+              <div class="qty">
+                <button class="qtyBtn" data-minus="${item.id}">−</button>
+                <div class="qtyNum">${qty}</div>
+                <button class="qtyBtn plus" data-plus="${item.id}">+</button>
+              </div>
             </div>
-            ${hasVariants && expanded ? `
-              <div class="variantBox">
-                ${item.variants.map(v=>`
-                  <button class="variantBtn" data-plus="${v.id}">
-                    <b>${v.label}</b>
-                    <span>${money(v.price)}</span>
-                  </button>
-                `).join("")}
-              </div>
-              <div class="variantHint">點「杯」或「瓶」即可加入本次點單</div>
-            ` : ""}
-            ${!hasVariants && qty>0 ? `<div class="itemNote"><input data-note="${item.id}" value="${escapeHtml(state.itemNotes[item.id]||"")}" placeholder="此品項備註：例不要蔥、鹽烤、先出"></div>` : ""}
+            ${qty>0 ? `<div class="itemNote"><input data-note="${item.id}" value="${escapeHtml(state.itemNotes[item.id]||"")}" placeholder="此品項備註：例不要蔥、鹽烤、先出"></div>` : ""}
           </div>
         `;
       }).join("");
-      document.querySelectorAll("[data-expand]").forEach(b=>b.onclick=()=>{
-        state.expanded[b.dataset.expand] = !state.expanded[b.dataset.expand];
-        renderMenu();
-      });
       document.querySelectorAll("[data-plus]").forEach(b=>b.onclick=()=>changeQty(b.dataset.plus,1));
       document.querySelectorAll("[data-minus]").forEach(b=>b.onclick=()=>changeQty(b.dataset.minus,-1));
       document.querySelectorAll("[data-note]").forEach(inp=>{
