@@ -71,12 +71,18 @@
     .qtyNum{width:28px;text-align:center;font-size:20px;font-weight:950}
     .itemNote{margin-top:10px}
     .itemNote input{width:100%;border:1px solid var(--line);background:#faf7f1;border-radius:15px;padding:11px;outline:none;font-size:14px}
-    .cartBar{position:fixed;left:50%;bottom:82px;transform:translateX(-50%);z-index:30;width:min(520px,100%);padding:0 14px}
-    .cartPanel{background:white;border:1px solid var(--line);border-radius:26px;padding:14px;box-shadow:0 18px 45px rgba(28,25,23,.18)}
-    .cartTop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .cartFab{position:fixed;right:max(14px,calc((100vw - 520px)/2 + 14px));bottom:84px;z-index:35;display:flex;align-items:center;gap:8px;background:var(--main);color:white;border-radius:999px;padding:10px 12px;box-shadow:0 12px 28px rgba(28,25,23,.22);font-weight:950}
+    .cartFabIcon{font-size:18px;line-height:1}
+    .cartFabCount{display:grid;place-items:center;min-width:24px;height:24px;border-radius:999px;background:white;color:var(--main);font-size:13px;padding:0 6px}
+    .cartFabTotal{font-size:12px;color:#fff7ed;max-width:88px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cartBackdrop{position:fixed;inset:0;z-index:45;background:rgba(28,25,23,.36);backdrop-filter:blur(2px)}
+    .cartBar{position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:55;width:min(520px,100%);padding:0 14px calc(14px + env(safe-area-inset-bottom))}
+    .cartPanel{background:white;border:1px solid var(--line);border-radius:26px 26px 0 0;padding:14px;box-shadow:0 -18px 45px rgba(28,25,23,.2);max-height:72vh;display:flex;flex-direction:column}
+    .cartTop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px}
     .cartTop small{display:block;color:var(--main);font-weight:950}
     .cartTop b{font-size:20px}
-    .cartList{max-height:132px;overflow:auto;background:#faf7f1;border-radius:16px;padding:10px;margin-bottom:10px}
+    .cartActions{display:flex;align-items:center;gap:8px}
+    .cartList{max-height:38vh;overflow:auto;background:#faf7f1;border-radius:16px;padding:10px;margin-bottom:10px}
     .cartLine{border-bottom:1px solid var(--line);padding:6px 0}
     .cartLine:last-child{border-bottom:0}
     .cartLineMain{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:900}
@@ -116,7 +122,7 @@
       .itemName{font-size:15px}
     }
     @media print{
-      header,nav,.cartBar,.searchWrap,.catScroll,.card,.toolbar .smallDanger{display:none!important}
+      header,nav,.cartBar,.cartFab,.cartBackdrop,.searchWrap,.catScroll,.card,.toolbar .smallDanger{display:none!important}
       .app{max-width:none;padding:0}
       main{display:block}
       .hidden{display:none!important}
@@ -209,6 +215,14 @@
       <section id="pageHistory" class="hidden"></section>
     </main>
 
+    <button class="cartFab hidden" id="cartFab" aria-label="開啟本次點單">
+      <span class="cartFabIcon">🛒</span>
+      <span class="cartFabCount" id="cartFabCount">0</span>
+      <small class="cartFabTotal" id="cartFabTotal">NT$0</small>
+    </button>
+
+    <div class="cartBackdrop hidden" id="cartBackdrop"></div>
+
     <div class="cartBar hidden" id="cartBar">
       <div class="cartPanel">
         <div class="cartTop">
@@ -216,7 +230,10 @@
             <small id="cartTable">A1 本次點單</small>
             <b id="cartSummary">0 份・NT$0</b>
           </div>
-          <button class="subtle" id="clearCart">清除</button>
+          <div class="cartActions">
+            <button class="subtle" id="clearCart">清除</button>
+            <button class="subtle" id="cartClose">收起</button>
+          </div>
         </div>
         <div class="cartList" id="cartList"></div>
         <button class="dark" id="submitOrder">送出訂單</button>
@@ -387,6 +404,7 @@
     const STORAGE_KEY = "shutou-kushiyaki-ordering-html-v1";
     let state = {
       tab:"order",
+      cartOpen:false,
       table:"A1",
       category:"全部",
       stationFilter:"全部",
@@ -477,6 +495,7 @@
     }
     function switchTab(tab){
       state.tab=tab;
+      if(tab !== "order") state.cartOpen=false;
       document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active", b.dataset.tab===tab));
       $("pageOrder").classList.toggle("hidden", tab!=="order");
       $("pagePending").classList.toggle("hidden", tab!=="pending");
@@ -550,6 +569,7 @@
       state.orders = [...newOrders, ...state.orders];
       state.cart={};
       state.itemNotes={};
+      state.cartOpen=false;
       $("orderNote").value="";
       save();
       switchTab("pending");
@@ -644,9 +664,19 @@
     }
     function renderCart(){
       const items = cartItems();
-      $("cartBar").classList.toggle("hidden", state.tab!=="order" || items.length===0);
+      const qty = items.reduce((s,i)=>s+i.qty,0);
+      const total = cartTotal();
+      const hasItems = items.length > 0;
+      if(!hasItems) state.cartOpen = false;
+      const showFab = state.tab === "order" && hasItems;
+      const showDrawer = showFab && state.cartOpen;
+      $("cartFab").classList.toggle("hidden", !showFab);
+      $("cartBackdrop").classList.toggle("hidden", !showDrawer);
+      $("cartBar").classList.toggle("hidden", !showDrawer);
+      $("cartFabCount").textContent = qty;
+      $("cartFabTotal").textContent = money(total);
       $("cartTable").textContent = `${state.table} 本次點單`;
-      $("cartSummary").textContent = `${items.reduce((s,i)=>s+i.qty,0)} 份・${money(cartTotal())}`;
+      $("cartSummary").textContent = `${qty} 份・${money(total)}`;
       $("cartList").innerHTML = items.map(i=>`
         <div class="cartLine">
           <div class="cartLineMain"><span>${i.name} × ${i.qty}</span><span>${money(i.subtotal)}</span></div>
@@ -776,9 +806,22 @@
     });
     $("quickSubmit").onclick=quickSubmit;
     $("submitOrder").onclick=submitOrder;
+    $("cartFab").onclick=()=>{
+      state.cartOpen=true;
+      renderCart();
+    };
+    $("cartBackdrop").onclick=()=>{
+      state.cartOpen=false;
+      renderCart();
+    };
+    $("cartClose").onclick=()=>{
+      state.cartOpen=false;
+      renderCart();
+    };
     $("clearCart").onclick=()=>{
       state.cart={};
       state.itemNotes={};
+      state.cartOpen=false;
       render();
     };
     document.querySelectorAll(".tab").forEach(btn=>{
