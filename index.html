@@ -140,8 +140,6 @@
     .orderItemTop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
     .itemDoneBtn{flex:0 0 auto;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:950}
     .itemDoneBtn.done{background:#f1f5f9;color:#64748b;border-color:#e2e8f0}
-
-    .orderNote{background:#fff7ed;color:#9a3412;border-radius:16px;padding:10px;font-size:14px;font-weight:800}
     .orderActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .doneBtn{background:var(--green);color:white;border-radius:16px;padding:13px;font-weight:950}
     .deleteBtn,.restoreBtn,.copyBtn{background:#f1ede6;color:#57534e;border-radius:16px;padding:13px;font-weight:950}
@@ -235,12 +233,9 @@
 
         <div style="height:10px"></div>
         <div class="menuList" id="menuList"></div>
+      </section>
 
-        <div style="height:12px"></div>
-
-        <div class="card">
-          <div class="sectionTitle">
-            <section id="pagePending" class="hidden"></section>
+      <section id="pagePending" class="hidden"></section>
       <section id="pageHistory" class="hidden"></section>
     </main>
 
@@ -707,7 +702,6 @@
       });
       lines.push(`---`);
       lines.push(`合計：${money(order.total)}`);
-      if(order.note) lines.push(`：${order.note}`);
       return lines.join("\\n");
     }
     async function copyOrder(id){
@@ -748,6 +742,7 @@
             createdAt,
             createdAtMs:createdAtMs + index,
             items:groupItems.map(item => ({...item, done:false})),
+            note,
             total:groupItems.reduce((sum,item)=>sum+Number(item.subtotal||0),0),
             status:"pending"
           };
@@ -757,7 +752,7 @@
       state.cart={};
       state.itemNotes={};
       state.cartOpen=false;
-      ;
+      
       save();
       switchTab("pending");
     }
@@ -935,7 +930,7 @@
       document.querySelectorAll("[data-plus]").forEach(b=>b.onclick=()=>changeQty(b.dataset.plus,1));
       document.querySelectorAll("[data-minus]").forEach(b=>b.onclick=()=>changeQty(b.dataset.minus,-1));
       document.querySelectorAll("[data-note]").forEach(inp=>{
-        inp.oninput=()=>setItemNote(inp.dataset.inp.value);
+        inp.oninput=()=>setItemNote(inp.dataset.note, inp.value);
       });
     }
 
@@ -1055,7 +1050,7 @@
               `;
             }).join("")}
           </div>
-          ${order.note ? `<div class="orderNote"><div class="orderActions">
+          <div class="orderActions">
             ${history
               ? `<button class="restoreBtn" data-restore="${order.id}">還原</button>`
               : `<button class="doneBtn" data-done="${order.id}">完成</button>`
