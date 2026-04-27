@@ -2,9 +2,13 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>手刀串燒｜點餐紀錄</title>
   <meta name="theme-color" content="#7f1d1d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="手刀點餐" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <style>
     :root{
       --bg:#f8f3ea;
@@ -19,6 +23,11 @@
       --amber:#fff7ed;
     }
     *{box-sizing:border-box}
+    html{touch-action:manipulation;-webkit-text-size-adjust:100%}
+    body{overscroll-behavior:none}
+    input,textarea,select{font-size:16px!important}
+    button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+
     html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
     body{min-height:100vh}
     button,input,textarea,select{font:inherit}
@@ -300,6 +309,21 @@
       staffName = prompt("請輸入你的名字（例如：Amber / 外場1 / 外場2）") || "外場";
       localStorage.setItem("shutou-staff-name", staffName);
     }
+
+
+    // App-like mobile behavior: reduce accidental pinch / double-tap zoom
+    document.addEventListener("gesturestart", function(e){ e.preventDefault(); }, {passive:false});
+    document.addEventListener("gesturechange", function(e){ e.preventDefault(); }, {passive:false});
+    document.addEventListener("gestureend", function(e){ e.preventDefault(); }, {passive:false});
+    let lastTouchEnd = 0;
+    document.addEventListener("touchend", function(e){
+      const now = Date.now();
+      if(now - lastTouchEnd <= 300){ e.preventDefault(); }
+      lastTouchEnd = now;
+    }, {passive:false});
+    document.addEventListener("touchmove", function(e){
+      if(e.touches && e.touches.length > 1){ e.preventDefault(); }
+    }, {passive:false});
 
     const TABLES = ["A1","A2","B1","B2","B3","B4","B5","B6","B7","B8","C1","C2"];
 
