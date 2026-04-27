@@ -133,6 +133,12 @@
     .orderLine:first-child{padding-top:0}
     .orderLine:last-child{border-bottom:0;padding-bottom:0}
     .orderLineMain{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:950}
+    .orderLine.done{opacity:.52}
+    .orderLine.done .orderLineMain span:first-child{text-decoration:line-through}
+    .orderItemTop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .itemDoneBtn{flex:0 0 auto;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:950}
+    .itemDoneBtn.done{background:#f1f5f9;color:#64748b;border-color:#e2e8f0}
+
     .orderNote{background:#fff7ed;color:#9a3412;border-radius:16px;padding:10px;font-size:14px;font-weight:800}
     .orderActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .doneBtn{background:var(--green);color:white;border-radius:16px;padding:13px;font-weight:950}
@@ -684,7 +690,7 @@
         station,
         tableNo:state.table,
         createdAt:nowLabel(),
-        items:[item],
+        items:[{...item, done:false}],
         note:"臨時加點",
         total:price,
         status:"pending"
@@ -696,12 +702,31 @@
       switchTab("pending");
     }
     function markDone(id){
-      state.orders = state.orders.map(o=>o.id===id ? {...o,status:"done",doneAt:nowLabel()} : o);
+      state.orders = state.orders.map(o=>o.id===id ? {...o,status:"done",doneAt:nowLabel(),items:o.items.map(item=>({...item,done:true}))} : o);
+      save();
+      render();
+    }
+    function toggleItemDone(orderId, itemKey){
+      state.orders = state.orders.map(order=>{
+        if(order.id !== orderId) return order;
+        const items = order.items.map((item, index)=>{
+          const key = `${item.id}-${index}`;
+          if(key !== itemKey) return item;
+          return {...item, done:!item.done};
+        });
+        const allDone = items.length > 0 && items.every(item=>item.done);
+        return {
+          ...order,
+          items,
+          status: allDone ? "done" : "pending",
+          doneAt: allDone ? nowLabel() : ""
+        };
+      });
       save();
       render();
     }
     function restoreOrder(id){
-      state.orders = state.orders.map(o=>o.id===id ? {...o,status:"pending",doneAt:""} : o);
+      state.orders = state.orders.map(o=>o.id===id ? {...o,status:"pending",doneAt:"",items:o.items.map(item=>({...item,done:false}))} : o);
       save();
       render();
     }
@@ -864,6 +889,7 @@
           renderOrders();
         };
       });
+      document.querySelectorAll("[data-item-done]").forEach(b=>b.onclick=()=>toggleItemDone(b.dataset.itemDone, b.dataset.itemKey));
       document.querySelectorAll("[data-done]").forEach(b=>b.onclick=()=>markDone(b.dataset.done));
       document.querySelectorAll("[data-restore]").forEach(b=>b.onclick=()=>restoreOrder(b.dataset.restore));
       document.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>deleteOrder(b.dataset.delete));
@@ -910,12 +936,21 @@
             <div class="orderTotal">${money(order.total)}</div>
           </div>
           <div class="orderItems">
-            ${order.items.map(i=>`
-              <div class="orderLine">
-                <div class="orderLineMain"><span>${i.name} × ${i.qty}</span><span>${money(i.subtotal)}</span></div>
-                ${i.note ? `<div class="cartNote">單品備註：${escapeHtml(i.note)}</div>` : ""}
-              </div>
-            `).join("")}
+            ${order.items.map((i,index)=>{
+              const itemKey = `${i.id}-${index}`;
+              const isDone = !!i.done || history;
+              return `
+                <div class="orderLine ${isDone ? "done" : ""}">
+                  <div class="orderItemTop">
+                    <div style="min-width:0;flex:1">
+                      <div class="orderLineMain"><span>${i.name} × ${i.qty}</span><span>${money(i.subtotal)}</span></div>
+                      ${i.note ? `<div class="cartNote">單品備註：${escapeHtml(i.note)}</div>` : ""}
+                    </div>
+                    ${!history ? `<button class="itemDoneBtn ${isDone ? "done" : ""}" data-item-done="${order.id}" data-item-key="${itemKey}">${isDone ? "還原" : "完成"}</button>` : ""}
+                  </div>
+                </div>
+              `;
+            }).join("")}
           </div>
           ${order.note ? `<div class="orderNote"><b>整單備註：</b>${escapeHtml(order.note)}</div>` : ""}
           <div class="orderActions">
