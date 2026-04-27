@@ -44,7 +44,20 @@
     .searchWrap input{width:100%;border:1px solid var(--line);background:white;border-radius:24px;padding:15px 44px 15px 42px;outline:none}
     .searchIcon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#a8a29e}
     .clearSearch{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:#f5f1ea;color:#57534e;font-weight:900}
-    .catScroll{display:flex;gap:8px;overflow:auto;padding-bottom:2px;margin:0 -14px;padding-left:14px;padding-right:14px}
+    .catScroll{
+      position:sticky;
+      top:var(--sticky-top, 88px);
+      z-index:19;
+      display:flex;
+      gap:8px;
+      overflow:auto;
+      margin:0 -14px;
+      padding:8px 14px 10px;
+      background:rgba(248,243,234,.96);
+      backdrop-filter:blur(14px);
+      border-bottom:1px solid rgba(231,222,210,.9);
+      box-shadow:0 8px 18px rgba(28,25,23,.05);
+    }
     .catScroll::-webkit-scrollbar{display:none}
     .quickGrid{display:grid;grid-template-columns:1fr 96px;gap:8px}
     .input,.textarea{width:100%;border:1px solid var(--line);background:white;border-radius:16px;padding:12px;outline:none}
@@ -786,6 +799,16 @@
       $("pagePending").classList.toggle("hidden", state.tab!=="pending");
       $("pageHistory").classList.toggle("hidden", state.tab!=="history");
     }
+
+    function updateStickyTop(){
+      const header = document.querySelector("header");
+      if(header){
+        document.documentElement.style.setProperty("--sticky-top", `${Math.ceil(header.getBoundingClientRect().height)}px`);
+      }
+    }
+    window.addEventListener("resize", updateStickyTop);
+    window.addEventListener("orientationchange", updateStickyTop);
+    updateStickyTop();
 
     load();
     render();
