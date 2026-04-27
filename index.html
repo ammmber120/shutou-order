@@ -85,10 +85,17 @@
     .itemNote{margin-top:10px}
     .itemNote input{width:100%;border:1px solid var(--line);background:#faf7f1;border-radius:15px;padding:11px;outline:none;font-size:14px}
     .variantBox{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .variantBtn{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f5f1ea;border:1px solid var(--line);border-radius:16px;padding:12px;font-weight:950;color:#44403c}
+    .variantBtn{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f5f1ea;border:1px solid var(--line);border-radius:16px;padding:10px 12px;font-weight:950;color:#44403c}
     .variantBtn b{font-size:14px}
     .variantBtn span{font-size:13px;color:var(--main)}
+    .variantInfo{display:flex;flex-direction:column;gap:2px}
+    .variantQty{display:flex;align-items:center;gap:8px}
+    .variantQtyBtn{width:34px;height:34px;border-radius:50%;background:white;color:#44403c;font-size:20px;font-weight:950;border:1px solid var(--line);line-height:1}
+    .variantQtyBtn.plus{background:var(--dark);color:white;border-color:var(--dark)}
+    .variantQtyNum{width:24px;text-align:center;font-size:17px;font-weight:950}
     .variantHint{margin-top:8px;font-size:12px;color:var(--muted);font-weight:800}
+    .cartLineTop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .cartRemove{flex:0 0 auto;border-radius:999px;background:#fff;color:#7f1d1d;border:1px solid var(--line);padding:5px 8px;font-size:12px;font-weight:950}
 
     .cartFab{position:fixed;right:max(14px,calc((100vw - 520px)/2 + 14px));bottom:84px;z-index:35;display:flex;align-items:center;gap:8px;background:var(--main);color:white;border-radius:999px;padding:10px 12px;box-shadow:0 12px 28px rgba(28,25,23,.22);font-weight:950}
     .cartFabIcon{font-size:18px;line-height:1}
@@ -575,6 +582,11 @@
       }
       render();
     }
+    function removeCartItem(id){
+      delete state.cart[id];
+      delete state.itemNotes[id];
+      render();
+    }
     function setItemNote(id,value){
       state.itemNotes[id]=value;
       renderCart();
@@ -746,14 +758,21 @@
                     if(!variant) return "";
                     const label = variant.name.includes("－杯") ? "杯" : variant.name.includes("－瓶") ? "瓶" : variant.name;
                     return `
-                      <button class="variantBtn" data-plus="${id}">
-                        <b>${label}</b>
-                        <span>${money(variant.price)}</span>
-                      </button>
+                      <div class="variantBtn">
+                        <div class="variantInfo">
+                          <b>${label}</b>
+                          <span>${money(variant.price)}</span>
+                        </div>
+                        <div class="variantQty">
+                          <button class="variantQtyBtn" data-minus="${id}">−</button>
+                          <div class="variantQtyNum">${state.cart[id] || 0}</div>
+                          <button class="variantQtyBtn plus" data-plus="${id}">+</button>
+                        </div>
+                      </div>
                     `;
                   }).join("")}
                 </div>
-                <div class="variantHint">點「杯」或「瓶」即可加入本次點單</div>
+                <div class="variantHint">使用右側 ＋ / － 調整杯或瓶數量</div>
               ` : ""}
             </div>
           `;
@@ -809,10 +828,18 @@
       $("cartSummary").textContent = `${qty} 份・${money(total)}`;
       $("cartList").innerHTML = items.map(i=>`
         <div class="cartLine">
-          <div class="cartLineMain"><span>${i.name} × ${i.qty}</span><span>${money(i.subtotal)}</span></div>
-          ${i.note ? `<div class="cartNote">備註：${escapeHtml(i.note)}</div>` : ""}
+          <div class="cartLineTop">
+            <div style="min-width:0;flex:1">
+              <div class="cartLineMain"><span>${i.name} × ${i.qty}</span><span>${money(i.subtotal)}</span></div>
+              ${i.note ? `<div class="cartNote">備註：${escapeHtml(i.note)}</div>` : ""}
+            </div>
+            <button class="cartRemove" data-remove-cart="${i.id}">刪除</button>
+          </div>
         </div>
       `).join("");
+      document.querySelectorAll("[data-remove-cart]").forEach(b=>{
+        b.onclick=()=>removeCartItem(b.dataset.removeCart);
+      });
     }
     function renderOrders(){
       const pending = pendingOrders();
