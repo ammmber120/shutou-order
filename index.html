@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>手刀串燒｜點餐紀錄</title>
+  <meta name="theme-color" content="#7f1d1d" />
+  <style>
+    :root{
+      --bg:#f8f3ea;
+      --card:#fffaf3;
+      --ink:#1c1917;
+      --muted:#78716c;
+      --line:#e7ded2;
+      --main:#7f1d1d;
+      --main2:#991b1b;
+      --dark:#1c1917;
+      --green:#059669;
+      --amber:#fff7ed;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+    body{min-height:100vh}
+    button,input,textarea,select{font:inherit}
+    button{border:0;cursor:pointer}
+    .app{max-width:520px;margin:0 auto;min-height:100vh;padding-bottom:96px}
+    header{position:sticky;top:0;z-index:20;background:rgba(248,243,234,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:16px}
+    .headrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{font-size:12px;font-weight:900;letter-spacing:.22em;color:var(--main)}
+    h1{font-size:26px;line-height:1.15;margin:4px 0 0;font-weight:950}
+    .countBox{background:var(--dark);color:white;border-radius:18px;padding:10px 14px;text-align:center;min-width:76px}
+    .countBox small{display:block;color:#d6d3d1;font-size:11px}
+    .countBox b{font-size:24px}
+    main{padding:14px;display:flex;flex-direction:column;gap:14px}
+    .card{background:rgba(255,250,243,.94);border:1px solid var(--line);border-radius:26px;padding:14px;box-shadow:0 6px 18px rgba(28,25,23,.04)}
+    .sectionTitle{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .sectionTitle b{font-size:16px}
+    .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:900;background:#fff;color:var(--muted);white-space:nowrap}
+    .pill.active{background:var(--dark);color:white}
+    .tableGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .tableBtn{border-radius:16px;padding:12px 6px;font-weight:950;background:#f1ede6;color:#44403c}
+    .tableBtn.active{background:var(--main);color:white}
+    .searchWrap{position:relative}
+    .searchWrap input{width:100%;border:1px solid var(--line);background:white;border-radius:24px;padding:15px 44px 15px 42px;outline:none}
+    .searchIcon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#a8a29e}
+    .clearSearch{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:#f5f1ea;color:#57534e;font-weight:900}
+    .catScroll{display:flex;gap:8px;overflow:auto;padding-bottom:2px;margin:0 -14px;padding-left:14px;padding-right:14px}
+    .catScroll::-webkit-scrollbar{display:none}
+    .quickGrid{display:grid;grid-template-columns:1fr 96px;gap:8px}
+    .input,.textarea{width:100%;border:1px solid var(--line);background:white;border-radius:16px;padding:12px;outline:none}
+    .textarea{min-height:84px;resize:none}
+    .primary{width:100%;background:var(--main);color:white;border-radius:16px;padding:14px;font-weight:950}
+    .primary:active,.dark:active,.tableBtn:active,.qtyBtn:active{transform:scale(.98)}
+    .dark{width:100%;background:var(--dark);color:white;border-radius:16px;padding:15px;font-weight:950}
+    .subtle{background:#f1ede6;color:#57534e;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:950}
+    .menuHead{display:flex;align-items:flex-end;justify-content:space-between}
+    .menuHead h2{margin:0;font-size:19px}
+    .menuHead p{margin:3px 0 0;color:var(--muted);font-size:12px;font-weight:700}
+    .hint{font-size:12px;color:var(--muted);font-weight:800}
+    .menuList{display:flex;flex-direction:column;gap:8px}
+    .item{background:white;border:1px solid var(--line);border-radius:24px;padding:13px;box-shadow:0 5px 12px rgba(28,25,23,.03)}
+    .item.selected{outline:2px solid var(--main)}
+    .itemTop{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .itemInfo{min-width:0;flex:1}
+    .tag{display:inline-flex;background:#f5f1ea;color:#78716c;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:900;margin-bottom:5px}
+    .itemName{font-size:16px;font-weight:950;line-height:1.25}
+    .price{color:var(--main);font-weight:950;margin-top:4px;font-size:14px}
+    .qty{display:flex;align-items:center;gap:8px}
+    .qtyBtn{width:39px;height:39px;border-radius:50%;background:#f1ede6;color:#44403c;font-size:22px;font-weight:800;line-height:1}
+    .qtyBtn.plus{background:var(--dark);color:white}
+    .qtyNum{width:28px;text-align:center;font-size:20px;font-weight:950}
+    .itemNote{margin-top:10px}
+    .itemNote input{width:100%;border:1px solid var(--line);background:#faf7f1;border-radius:15px;padding:11px;outline:none;font-size:14px}
+    .cartBar{position:fixed;left:50%;bottom:82px;transform:translateX(-50%);z-index:30;width:min(520px,100%);padding:0 14px}
+    .cartPanel{background:white;border:1px solid var(--line);border-radius:26px;padding:14px;box-shadow:0 18px 45px rgba(28,25,23,.18)}
+    .cartTop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .cartTop small{display:block;color:var(--main);font-weight:950}
+    .cartTop b{font-size:20px}
+    .cartList{max-height:132px;overflow:auto;background:#faf7f1;border-radius:16px;padding:10px;margin-bottom:10px}
+    .cartLine{border-bottom:1px solid var(--line);padding:6px 0}
+    .cartLine:last-child{border-bottom:0}
+    .cartLineMain{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:900}
+    .cartNote{font-size:12px;color:var(--main);font-weight:800;margin-top:3px}
+    nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:40;width:min(520px,100%);background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+    .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .tab{position:relative;border-radius:17px;background:#f1ede6;color:#57534e;padding:12px 8px;font-weight:950}
+    .tab.active{background:var(--dark);color:white}
+    .badge{position:absolute;right:-3px;top:-5px;min-width:21px;height:21px;border-radius:999px;background:var(--main);color:white;font-size:11px;display:grid;place-items:center;padding:0 5px}
+    .hidden{display:none!important}
+    .empty{min-height:280px;display:grid;place-items:center;text-align:center;color:var(--muted);background:rgba(255,255,255,.7);border:1px dashed #d6cfc5;border-radius:26px;font-weight:900}
+    .orderCard{background:white;border:1px solid var(--line);border-radius:26px;padding:14px;box-shadow:0 5px 14px rgba(28,25,23,.04);display:flex;flex-direction:column;gap:10px}
+    .orderTop{display:flex;justify-content:space-between;gap:12px}
+    .tableBadge{display:inline-flex;background:var(--dark);color:white;border-radius:999px;padding:6px 12px;font-weight:950;font-size:14px}
+    .meta{font-size:12px;color:var(--muted);font-weight:700;margin-top:5px}
+    .orderTotal{font-size:18px;color:var(--main);font-weight:950}
+    .orderItems{background:#faf7f1;border-radius:16px;padding:10px}
+    .orderLine{border-bottom:1px solid var(--line);padding:7px 0}
+    .orderLine:first-child{padding-top:0}
+    .orderLine:last-child{border-bottom:0;padding-bottom:0}
+    .orderLineMain{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:950}
+    .orderNote{background:#fff7ed;color:#9a3412;border-radius:16px;padding:10px;font-size:14px;font-weight:800}
+    .orderActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .doneBtn{background:var(--green);color:white;border-radius:16px;padding:13px;font-weight:950}
+    .deleteBtn,.restoreBtn,.copyBtn{background:#f1ede6;color:#57534e;border-radius:16px;padding:13px;font-weight:950}
+    .restoreBtn{background:var(--dark);color:white}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:2px}
+    .toolbar h2{margin:0;font-size:20px}
+    .smallDanger{background:white;color:#7f1d1d;border:1px solid var(--line);border-radius:999px;padding:9px 12px;font-size:12px;font-weight:950}
+    .toast{position:fixed;left:50%;bottom:155px;transform:translateX(-50%);z-index:60;background:var(--dark);color:white;border-radius:999px;padding:11px 16px;font-size:14px;font-weight:900;box-shadow:0 12px 30px rgba(28,25,23,.2)}
+    @media (max-width:360px){
+      .tableGrid{grid-template-columns:repeat(3,1fr)}
+      h1{font-size:23px}
+      .itemName{font-size:15px}
+    }
+    @media print{
+      header,nav,.cartBar,.searchWrap,.catScroll,.card,.toolbar .smallDanger{display:none!important}
+      .app{max-width:none;padding:0}
+      main{display:block}
+      .hidden{display:none!important}
+      body{background:white}
+      .orderCard{break-inside:avoid;border:1px solid #000;box-shadow:none;margin-bottom:8px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="headrow">
+        <div>
+          <div class="brand">手刀串燒</div>
+          <h1>手機點餐紀錄</h1>
+        </div>
+        <div class="countBox">
+          <small>未出餐</small>
+          <b id="pendingCount">0</b>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="pageOrder">
+        <div class="card">
+          <div class="sectionTitle">
+            <b>桌號</b>
+            <span class="pill" id="currentTable">目前：A1</span>
+          </div>
+          <div class="tableGrid" id="tableGrid"></div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="searchWrap">
+          <span class="searchIcon">⌕</span>
+          <input id="searchInput" placeholder="搜尋餐點、酒水、分類" autocomplete="off" />
+          <button id="clearSearch" class="clearSearch hidden">×</button>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="catScroll" id="categoryBar"></div>
+
+        <div style="height:12px"></div>
+
+        <div class="card">
+          <div class="sectionTitle">
+            <b>臨時加點 / 手寫品項</b>
+          </div>
+          <div class="quickGrid">
+            <input class="input" id="quickName" placeholder="例如：客製酒款" />
+            <input class="input" id="quickPrice" placeholder="金額" inputmode="numeric" />
+          </div>
+          <div style="height:10px"></div>
+          <button class="primary" id="quickSubmit">直接送出臨時加點</button>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="menuHead">
+          <div>
+            <h2 id="menuTitle">全部</h2>
+            <p id="menuCount">共 0 個品項</p>
+          </div>
+          <div class="hint">串燒皆以 1 串計</div>
+        </div>
+
+        <div style="height:10px"></div>
+        <div class="menuList" id="menuList"></div>
+
+        <div style="height:12px"></div>
+
+        <div class="card">
+          <div class="sectionTitle">
+            <b>整單備註</b>
+          </div>
+          <textarea class="textarea" id="orderNote" placeholder="例如：先出酒、餐點一起上、客人趕時間、過敏提醒"></textarea>
+        </div>
+      </section>
+
+      <section id="pagePending" class="hidden"></section>
+      <section id="pageHistory" class="hidden"></section>
+    </main>
+
+    <div class="cartBar hidden" id="cartBar">
+      <div class="cartPanel">
+        <div class="cartTop">
+          <div>
+            <small id="cartTable">A1 本次點單</small>
+            <b id="cartSummary">0 份・NT$0</b>
+          </div>
+          <button class="subtle" id="clearCart">清除</button>
+        </div>
+        <div class="cartList" id="cartList"></div>
+        <button class="dark" id="submitOrder">送出訂單</button>
+      </div>
+    </div>
+
+    <nav>
+      <div class="tabs">
+        <button class="tab active" data-tab="order">點餐</button>
+        <button class="tab" data-tab="pending">未出餐 <span class="badge hidden" id="navBadge">0</span></button>
+        <button class="tab" data-tab="history">紀錄</button>
+      </div>
+    </nav>
+  </div>
+
+  <div class="toast hidden" id="toast">已複製</div>
+
+  <script>
+    const TABLES = ["A1","A2","A3","B1","B2","B3","C1","C2","吧台1","吧台2","吧台3","外帶"];
+
+    const MENU = [
+      {id:"kimchi",name:"韓式泡菜",category:"下酒菜",price:90},
+      {id:"ume-tomato",name:"梅漬番茄",category:"下酒菜",price:90},
+      {id:"ankimo-ponzu",name:"洋蔥醋拌鱈魚肝",category:"下酒菜",price:140},
+      {id:"tako-wasabi",name:"山葵章魚",category:"下酒菜",price:100},
+      {id:"shiokara",name:"塩辛花枝",category:"下酒菜",price:120},
+      {id:"katsuo-tataki",name:"稻燒鰹魚刺身",category:"下酒菜",price:240},
+
+      {id:"caesar-salad",name:"帕瑪森凱薩生菜沙拉",category:"沙拉",price:180},
+      {id:"sesame-tofu-salad",name:"胡麻豆腐生菜沙拉",category:"沙拉",price:180},
+      {id:"prosciutto-mozzarella-salad",name:"生火腿莫札瑞拉起司生菜沙拉",category:"沙拉",price:240},
+
+      {id:"heisei-yakisoba",name:"平成炒麵",category:"名物主食",price:220},
+      {id:"matsusaka-water-lotus",name:"松阪豬炒水蓮",category:"名物主食",price:140},
+      {id:"bacon-cabbage",name:"培根高麗菜",category:"名物主食",price:140},
+      {id:"okonomiyaki-seafood",name:"大阪名物御好燒－海鮮",category:"名物主食",price:250},
+      {id:"okonomiyaki-pork",name:"大阪名物御好燒－豬肉",category:"名物主食",price:250},
+      {id:"fried-rice-pork",name:"鐵板炒飯－豬肉",category:"名物主食",price:220},
+      {id:"fried-rice-beef",name:"鐵板炒飯－牛肉",category:"名物主食",price:220},
+      {id:"mentaiko-mochi-egg",name:"明太玉子麻糬燒",category:"名物主食",price:160},
+      {id:"mentaiko-squid-ring",name:"奶油明太子魷魚圈",category:"名物主食",price:240},
+
+      {id:"fried-squid-legs",name:"唐揚魷魚足",category:"炸物",price:180},
+      {id:"fried-whitebait-tartar",name:"塔塔銀魚",category:"炸物",price:180},
+      {id:"fried-oyster",name:"海之惠 酥炸廣島牡蠣",category:"炸物",price:240},
+      {id:"truffle-potato",name:"松露風味炸馬鈴薯佐酸奶油",category:"炸物",price:200},
+      {id:"karaage",name:"唐揚炸雞",category:"炸物",price:220},
+      {id:"fried-chicken-skin",name:"唐揚雞皮",category:"炸物",price:140},
+      {id:"fried-cartilage",name:"酥炸雞軟骨",category:"炸物",price:160},
+
+      {id:"beef-short-rib-yuzu",name:"柚香牛小排",category:"串燒－牛",price:100},
+      {id:"wagyu-harami",name:"和牛橫膈膜",category:"串燒－牛",price:120},
+      {id:"garlic-beef-rib",name:"蒜香牛肋條",category:"串燒－牛",price:90},
+      {id:"beef-tongue-scallion",name:"蔥塩牛舌",category:"串燒－牛",price:90},
+
+      {id:"chicken-negi",name:"雞肉蔥串",category:"串燒－雞",price:80},
+      {id:"chicken-wing",name:"雞翅",category:"串燒－雞",price:80},
+      {id:"chicken-sasami-wasabi",name:"山葵里肌肉",category:"串燒－雞",price:70},
+      {id:"chicken-knee-cartilage",name:"雞膝軟骨",category:"串燒－雞",price:70},
+      {id:"chicken-neck-yuzu",name:"柚子胡椒雞頸肉串",category:"串燒－雞",price:80},
+      {id:"chicken-leg-mentaiko",name:"明太子雞腿肉串",category:"串燒－雞",price:80},
+      {id:"chicken-leg-wasabi",name:"山葵雞腿肉串",category:"串燒－雞",price:80},
+      {id:"chicken-heart",name:"雞心",category:"串燒－雞",price:70},
+      {id:"chicken-drumette",name:"翅小腿",category:"串燒－雞",price:60},
+
+      {id:"pork-green-chili",name:"剝皮辣椒豚串",category:"串燒－豚",price:70},
+      {id:"matsusaka-pork",name:"松阪豚串",category:"串燒－豚",price:70},
+      {id:"pork-tongue-scallion",name:"蔥塩豚舌串",category:"串燒－豚",price:70},
+      {id:"pork-under-tongue",name:"舌下肉串",category:"串燒－豚",price:70},
+      {id:"kurobuta-pork-belly",name:"黑豚五花肉串",category:"串燒－豚",price:80},
+      {id:"bacon-grape",name:"培根葡萄捲",category:"串燒－豚",price:60},
+      {id:"bacon-tomato",name:"培根蕃茄捲",category:"串燒－豚",price:60},
+
+      {id:"zucchini",name:"櫛瓜",category:"串燒－野菜",price:50},
+      {id:"green-pepper",name:"青龍椒",category:"串燒－野菜",price:40},
+      {id:"okra",name:"秋葵",category:"串燒－野菜",price:50},
+      {id:"mentaiko-yam",name:"明太子山藥",category:"串燒－野菜",price:90},
+      {id:"mushroom",name:"蘑菇",category:"串燒－野菜",price:60},
+
+      {id:"fish-dried",name:"午仔魚一夜干",category:"特色料理",price:300},
+      {id:"hamachi-kama",name:"鹿兒島紅魽下巴",category:"特色料理",price:350},
+      {id:"salted-mackerel",name:"鹽燒鯖魚",category:"特色料理",price:240},
+      {id:"beef-stew",name:"紅酒燉牛肉佐蒜味薯泥（附四片法國麵包）",category:"特色料理",price:280},
+      {id:"butter-mushroom",name:"奶油綜合菇",category:"特色料理",price:150},
+      {id:"sake-clams",name:"酒蒸蛤蜊",category:"特色料理",price:180},
+
+      {id:"seafood-miso-soup",name:"海鮮蔬菜味噌湯",category:"湯品",price:180},
+      {id:"tonkotsu-veggie-soup",name:"豚骨風味蔬菜湯",category:"湯品",price:180},
+
+      {id:"suntory-beer-m",name:"Suntory頂級香濃生啤酒－中380ml",category:"啤酒",price:150},
+      {id:"suntory-beer-l",name:"Suntory頂級香濃生啤酒－特大700ml",category:"啤酒",price:250},
+      {id:"suntory-black-m",name:"Suntory頂級黑生啤酒－中380ml",category:"啤酒",price:150},
+      {id:"suntory-black-l",name:"Suntory頂級黑生啤酒－特大700ml",category:"啤酒",price:250},
+      {id:"suntory-half-m",name:"Suntory頂級特調生啤酒－中380ml",category:"啤酒",price:150},
+      {id:"suntory-half-l",name:"Suntory頂級特調生啤酒－特大700ml",category:"啤酒",price:250},
+      {id:"sapporo",name:"SAPPORO札幌啤酒－633ml",category:"啤酒",price:160},
+      {id:"orion",name:"Orion沖繩啤酒－500ml",category:"啤酒",price:160},
+
+      {id:"tantakatan-glass",name:"北海道 鍛高譚紫蘇燒酎－杯",category:"日本燒酎",price:150},
+      {id:"tantakatan-bottle",name:"北海道 鍛高譚紫蘇燒酎－瓶",category:"日本燒酎",price:1500},
+      {id:"kannoko-glass",name:"鹿兒島 神之河 麥燒酎－杯",category:"日本燒酎",price:140},
+      {id:"kannoko-bottle",name:"鹿兒島 神之河 麥燒酎－瓶",category:"日本燒酎",price:1400},
+      {id:"dorogame-pink-glass",name:"長崎縣 泥龜 芋燒酎－杯",category:"日本燒酎",price:150},
+      {id:"dorogame-pink-bottle",name:"長崎縣 泥龜 芋燒酎－瓶",category:"日本燒酎",price:1500},
+      {id:"dorogame-mugi-glass",name:"長崎縣 泥龜 麥燒酎－杯",category:"日本燒酎",price:150},
+      {id:"dorogame-mugi-bottle",name:"長崎縣 泥龜 麥燒酎－瓶",category:"日本燒酎",price:1500},
+      {id:"shochu-flight",name:"燒酎三種比（不可選）",category:"日本燒酎",price:400},
+      {id:"kuro-satsuma-glass",name:"鹿兒島 黑薩摩 芋燒酎－杯",category:"日本燒酎",price:180},
+      {id:"kuro-satsuma-bottle",name:"鹿兒島 黑薩摩 芋燒酎－瓶",category:"日本燒酎",price:1800},
+      {id:"aka-satsuma-glass",name:"鹿兒島 赤薩摩 芋燒酎－杯",category:"日本燒酎",price:180},
+      {id:"aka-satsuma-bottle",name:"鹿兒島 赤薩摩 芋燒酎－瓶",category:"日本燒酎",price:1800},
+      {id:"ookubo-glass",name:"鹿兒島 太久保 芋燒酎－杯",category:"日本燒酎",price:180},
+      {id:"ookubo-bottle",name:"鹿兒島 太久保 芋燒酎－瓶",category:"日本燒酎",price:1800},
+      {id:"beniotome-glass",name:"福岡 紅乙女 芝麻燒酎－杯",category:"日本燒酎",price:160},
+      {id:"beniotome-bottle",name:"福岡 紅乙女 芝麻燒酎－瓶",category:"日本燒酎",price:1600},
+
+      {id:"gin-fizz",name:"琴費士（GIN FIZZ）",category:"調酒沙瓦",price:160},
+      {id:"oolong-high",name:"烏龍茶燒酎",category:"調酒沙瓦",price:130},
+      {id:"calpis-sour",name:"可爾必思沙瓦",category:"調酒沙瓦",price:130},
+      {id:"peach-calpis-sour",name:"水蜜桃可爾必思沙瓦",category:"調酒沙瓦",price:140},
+      {id:"plum-shiso-sour",name:"紫蘇梅酒沙瓦",category:"調酒沙瓦",price:150},
+      {id:"mango-calpis-sour",name:"芒果可爾必思沙瓦",category:"調酒沙瓦",price:140},
+      {id:"grape-calpis-sour",name:"巨峰葡萄可爾必思沙瓦",category:"調酒沙瓦",price:140},
+
+      {id:"umeshu",name:"梅酒－杯",category:"日本果實酒",price:150},
+      {id:"yuzu-shu",name:"柚子酒－杯",category:"日本果實酒",price:150},
+      {id:"grape-shu",name:"山葡萄酒－杯",category:"日本果實酒",price:150},
+
+      {id:"sake-glass",name:"日本清酒－單杯（請填酒款）",category:"日本清酒",price:0},
+      {id:"sake-bottle",name:"日本清酒－瓶（請填酒款）",category:"日本清酒",price:0},
+
+      {id:"iwai-glass",name:"岩井－杯",category:"威士忌",price:200},
+      {id:"iwai-bottle",name:"岩井－瓶",category:"威士忌",price:1800},
+      {id:"fujimine-glass",name:"富士嶺－杯",category:"威士忌",price:230},
+      {id:"fujimine-bottle",name:"富士嶺－瓶",category:"威士忌",price:2400},
+      {id:"asakura6-glass",name:"朝倉6年－杯",category:"威士忌",price:240},
+      {id:"asakura6-bottle",name:"朝倉6年－瓶",category:"威士忌",price:2500},
+      {id:"toki-glass",name:"季－杯",category:"威士忌",price:200},
+      {id:"toki-bottle",name:"季－瓶",category:"威士忌",price:1800},
+      {id:"yamazaki-glass",name:"山崎－杯",category:"威士忌",price:380},
+      {id:"yamazaki-bottle",name:"山崎－瓶",category:"威士忌",price:4200},
+      {id:"hakushu-glass",name:"白州－杯",category:"威士忌",price:380},
+      {id:"hakushu-bottle",name:"白州－瓶",category:"威士忌",price:4200},
+      {id:"hibiki-glass",name:"響－杯",category:"威士忌",price:380},
+      {id:"hibiki-bottle",name:"響－瓶",category:"威士忌",price:4200},
+      {id:"kaoru-glass",name:"香薰－杯",category:"威士忌",price:150},
+      {id:"kaoru-bottle",name:"香薰－瓶",category:"威士忌",price:1400},
+
+      {id:"yamazaki-highball",name:"山崎嗨",category:"威士忌蘇打",price:380},
+      {id:"hakushu-highball",name:"白州嗨",category:"威士忌蘇打",price:380},
+      {id:"hibiki-highball",name:"響嗨",category:"威士忌蘇打",price:380},
+      {id:"kaku-highball",name:"角嗨",category:"威士忌蘇打",price:140},
+      {id:"iwai-highball",name:"岩井嗨",category:"威士忌蘇打",price:200},
+      {id:"kaoru-highball",name:"香薰嗨",category:"威士忌蘇打",price:150},
+
+      {id:"hot-oolong",name:"凍頂烏龍茶（熱）",category:"無酒精飲料",price:90},
+      {id:"oolong-tea",name:"無糖烏龍茶",category:"無酒精飲料",price:80},
+      {id:"orange-juice",name:"美粒果柳橙汁",category:"無酒精飲料",price:80},
+      {id:"cola",name:"可樂",category:"無酒精飲料",price:80},
+      {id:"ginger-ale",name:"薑汁汽水",category:"無酒精飲料",price:80},
+      {id:"calpis",name:"可爾必思",category:"無酒精飲料",price:80},
+      {id:"sparkling-water",name:"氣泡水",category:"無酒精飲料",price:60},
+
+      {id:"alcohol-extra",name:"酒精加量",category:"其他",price:60},
+      {id:"corkage",name:"自帶酒開瓶費",category:"其他",price:300}
+    ];
+
+    const STORAGE_KEY = "shutou-kushiyaki-ordering-html-v1";
+    let state = {
+      tab:"order",
+      table:"A1",
+      category:"全部",
+      keyword:"",
+      cart:{},
+      itemNotes:{},
+      orders:[]
+    };
+
+    const $ = (id)=>document.getElementById(id);
+
+    function load(){
+      try{
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");
+        if(Array.isArray(saved.orders)) state.orders = saved.orders;
+      }catch(e){}
+    }
+    function save(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({orders:state.orders}));
+    }
+    function money(n){
+      n = Number(n||0);
+      if(n===0) return "時價/備註";
+      return "NT$" + n.toLocaleString("zh-TW");
+    }
+    function nowLabel(){
+      return new Date().toLocaleString("zh-TW",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+    }
+    function orderNo(){
+      const d = new Date();
+      return String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0")+String(d.getSeconds()).padStart(2,"0");
+    }
+    function categories(){
+      return ["全部", ...Array.from(new Set(MENU.map(i=>i.category)))];
+    }
+    function filteredMenu(){
+      const k = state.keyword.trim().toLowerCase();
+      return MENU.filter(i=>{
+        const mc = state.category==="全部" || i.category===state.category;
+        const mk = !k || i.name.toLowerCase().includes(k) || i.category.toLowerCase().includes(k);
+        return mc && mk;
+      });
+    }
+    function cartItems(){
+      return Object.entries(state.cart).map(([id,qty])=>{
+        const item = MENU.find(i=>i.id===id);
+        if(!item || qty<=0) return null;
+        return {...item, qty, note:(state.itemNotes[id]||"").trim(), subtotal:Number(item.price||0)*qty};
+      }).filter(Boolean);
+    }
+    function cartTotal(){
+      return cartItems().reduce((s,i)=>s+i.subtotal,0);
+    }
+    function pendingOrders(){
+      return state.orders.filter(o=>o.status==="pending");
+    }
+    function doneOrders(){
+      return state.orders.filter(o=>o.status==="done");
+    }
+    function changeQty(id, delta){
+      const next = Math.max(0, (state.cart[id]||0)+delta);
+      if(next===0){
+        delete state.cart[id];
+        delete state.itemNotes[id];
+      }else{
+        state.cart[id]=next;
+      }
+      render();
+    }
+    function setItemNote(id,value){
+      state.itemNotes[id]=value;
+      renderCart();
+    }
+    function switchTab(tab){
+      state.tab=tab;
+      document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active", b.dataset.tab===tab));
+      $("pageOrder").classList.toggle("hidden", tab!=="order");
+      $("pagePending").classList.toggle("hidden", tab!=="pending");
+      $("pageHistory").classList.toggle("hidden", tab!=="history");
+      render();
+      window.scrollTo({top:0,behavior:"smooth"});
+    }
+    function showToast(text="已複製"){
+      const t=$("toast");
+      t.textContent=text;
+      t.classList.remove("hidden");
+      setTimeout(()=>t.classList.add("hidden"),1400);
+    }
+    function orderText(order){
+      const lines = [];
+      lines.push(`手刀串燒 點餐`);
+      lines.push(`桌號：${order.tableNo}`);
+      lines.push(`單號：#${order.no}`);
+      lines.push(`時間：${order.createdAt}`);
+      lines.push(`---`);
+      order.items.forEach(i=>{
+        lines.push(`${i.name} × ${i.qty}　${money(i.subtotal)}`);
+        if(i.note) lines.push(`  備註：${i.note}`);
+      });
+      lines.push(`---`);
+      lines.push(`合計：${money(order.total)}`);
+      if(order.note) lines.push(`整單備註：${order.note}`);
+      return lines.join("\\n");
+    }
+    async function copyOrder(id){
+      const order = state.orders.find(o=>o.id===id);
+      if(!order) return;
+      const text = orderText(order);
+      try{
+        await navigator.clipboard.writeText(text);
+        showToast("訂單已複製");
+      }catch(e){
+        prompt("複製訂單文字：", text);
+      }
+    }
+    function submitOrder(){
+      const items = cartItems();
+      if(!items.length) return;
+      const order = {
+        id:"ORD-"+Date.now(),
+        no:orderNo(),
+        tableNo:state.table,
+        createdAt:nowLabel(),
+        items,
+        note:$("orderNote").value.trim(),
+        total:cartTotal(),
+        status:"pending"
+      };
+      state.orders.unshift(order);
+      state.cart={};
+      state.itemNotes={};
+      $("orderNote").value="";
+      save();
+      switchTab("pending");
+    }
+    function quickSubmit(){
+      const name = $("quickName").value.trim();
+      const price = Number(($("quickPrice").value||"").replace(/[^0-9]/g,"")) || 0;
+      if(!name){showToast("請輸入品項");return}
+      const item = {id:"custom-"+Date.now(), name, category:"臨時加點", price, qty:1, note:"", subtotal:price};
+      const order = {
+        id:"Q-"+Date.now(),
+        no:orderNo(),
+        tableNo:state.table,
+        createdAt:nowLabel(),
+        items:[item],
+        note:"臨時加點",
+        total:price,
+        status:"pending"
+      };
+      state.orders.unshift(order);
+      $("quickName").value="";
+      $("quickPrice").value="";
+      save();
+      switchTab("pending");
+    }
+    function markDone(id){
+      state.orders = state.orders.map(o=>o.id===id ? {...o,status:"done",doneAt:nowLabel()} : o);
+      save();
+      render();
+    }
+    function restoreOrder(id){
+      state.orders = state.orders.map(o=>o.id===id ? {...o,status:"pending",doneAt:""} : o);
+      save();
+      render();
+    }
+    function deleteOrder(id){
+      if(!confirm("確定刪除這張訂單嗎？")) return;
+      state.orders = state.orders.filter(o=>o.id!==id);
+      save();
+      render();
+    }
+    function clearAllOrders(){
+      if(!confirm("確定要清空全部訂單紀錄嗎？這個動作無法復原。")) return;
+      state.orders=[];
+      save();
+      render();
+    }
+    function renderTables(){
+      $("tableGrid").innerHTML = TABLES.map(t=>`<button class="tableBtn ${state.table===t?'active':''}" data-table="${t}">${t}</button>`).join("");
+      $("currentTable").textContent = "目前：" + state.table;
+      document.querySelectorAll("[data-table]").forEach(btn=>{
+        btn.onclick=()=>{state.table=btn.dataset.table;renderTables();renderCart();}
+      });
+    }
+    function renderCategories(){
+      $("categoryBar").innerHTML = categories().map(c=>`<button class="pill ${state.category===c?'active':''}" data-cat="${c}">${c}</button>`).join("");
+      document.querySelectorAll("[data-cat]").forEach(btn=>{
+        btn.onclick=()=>{state.category=btn.dataset.cat;renderMenu();renderCategories();}
+      });
+    }
+    function renderMenu(){
+      const list = filteredMenu();
+      $("menuTitle").textContent = state.category;
+      $("menuCount").textContent = `共 ${list.length} 個品項`;
+      $("menuList").innerHTML = list.map(item=>{
+        const qty = state.cart[item.id]||0;
+        return `
+          <div class="item ${qty>0?'selected':''}">
+            <div class="itemTop">
+              <div class="itemInfo">
+                <div class="tag">${item.category}</div>
+                <div class="itemName">${item.name}</div>
+                <div class="price">${money(item.price)}</div>
+              </div>
+              <div class="qty">
+                <button class="qtyBtn" data-minus="${item.id}">−</button>
+                <div class="qtyNum">${qty}</div>
+                <button class="qtyBtn plus" data-plus="${item.id}">+</button>
+              </div>
+            </div>
+            ${qty>0 ? `<div class="itemNote"><input data-note="${item.id}" value="${escapeHtml(state.itemNotes[item.id]||"")}" placeholder="此品項備註：例不要蔥、鹽烤、先出"></div>` : ""}
+          </div>
+        `;
+      }).join("");
+      document.querySelectorAll("[data-plus]").forEach(b=>b.onclick=()=>changeQty(b.dataset.plus,1));
+      document.querySelectorAll("[data-minus]").forEach(b=>b.onclick=()=>changeQty(b.dataset.minus,-1));
+      document.querySelectorAll("[data-note]").forEach(inp=>{
+        inp.oninput=()=>setItemNote(inp.dataset.note, inp.value);
+      });
+    }
+    function renderCart(){
+      const items = cartItems();
+      $("cartBar").classList.toggle("hidden", state.tab!=="order" || items.length===0);
+      $("cartTable").textContent = `${state.table} 本次點單`;
+      $("cartSummary").textContent = `${items.reduce((s,i)=>s+i.qty,0)} 份・${money(cartTotal())}`;
+      $("cartList").innerHTML = items.map(i=>`
+        <div class="cartLine">
+          <div class="cartLineMain"><span>${i.name} × ${i.qty}</span><span>${money(i.subtotal)}</span></div>
+          ${i.note ? `<div class="cartNote">備註：${escapeHtml(i.note)}</div>` : ""}
+        </div>
+      `).join("");
+    }
+    function renderOrders(){
+      const pending = pendingOrders();
+      const done = doneOrders();
+      $("pendingCount").textContent = pending.length;
+      $("navBadge").textContent = pending.length;
+      $("navBadge").classList.toggle("hidden", pending.length===0);
+
+      $("pagePending").innerHTML = renderOrderPage("未出餐訂單", pending, false);
+      $("pageHistory").innerHTML = `
+        <div class="toolbar">
+          <div><h2>已完成紀錄</h2><div class="hint">當日收尾可清空</div></div>
+          <button class="smallDanger" id="clearAll">清空全部</button>
+        </div>
+        ${renderOrderCards(done, true)}
+      `;
+
+      document.querySelectorAll("[data-done]").forEach(b=>b.onclick=()=>markDone(b.dataset.done));
+      document.querySelectorAll("[data-restore]").forEach(b=>b.onclick=()=>restoreOrder(b.dataset.restore));
+      document.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>deleteOrder(b.dataset.delete));
+      document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>copyOrder(b.dataset.copy));
+      const clear = $("clearAll");
+      if(clear) clear.onclick=clearAllOrders;
+    }
+    function renderOrderPage(title, orders, history){
+      return `
+        <div class="toolbar">
+          <div><h2>${title}</h2><div class="hint">可複製訂單傳到 LINE / 群組</div></div>
+        </div>
+        ${renderOrderCards(orders, history)}
+      `;
+    }
+    function renderOrderCards(orders, history){
+      if(!orders.length){
+        return `<div class="empty">目前沒有資料</div>`;
+      }
+      return orders.map(order=>`
+        <div class="orderCard">
+          <div class="orderTop">
+            <div>
+              <span class="tableBadge">${order.tableNo}</span>
+              <div class="meta">#${order.no}｜建立：${order.createdAt}${order.doneAt ? "｜完成："+order.doneAt : ""}</div>
+            </div>
+            <div class="orderTotal">${money(order.total)}</div>
+          </div>
+          <div class="orderItems">
+            ${order.items.map(i=>`
+              <div class="orderLine">
+                <div class="orderLineMain"><span>${i.name} × ${i.qty}</span><span>${money(i.subtotal)}</span></div>
+                ${i.note ? `<div class="cartNote">單品備註：${escapeHtml(i.note)}</div>` : ""}
+              </div>
+            `).join("")}
+          </div>
+          ${order.note ? `<div class="orderNote"><b>整單備註：</b>${escapeHtml(order.note)}</div>` : ""}
+          <div class="orderActions">
+            ${history
+              ? `<button class="restoreBtn" data-restore="${order.id}">還原</button>`
+              : `<button class="doneBtn" data-done="${order.id}">完成</button>`
+            }
+            <button class="copyBtn" data-copy="${order.id}">複製</button>
+          </div>
+          <button class="deleteBtn" data-delete="${order.id}">刪除</button>
+        </div>
+      `).join("");
+    }
+    function escapeHtml(str){
+      return String(str).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+    }
+    function render(){
+      renderTables();
+      renderCategories();
+      renderMenu();
+      renderCart();
+      renderOrders();
+      document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active", b.dataset.tab===state.tab));
+      $("pageOrder").classList.toggle("hidden", state.tab!=="order");
+      $("pagePending").classList.toggle("hidden", state.tab!=="pending");
+      $("pageHistory").classList.toggle("hidden", state.tab!=="history");
+    }
+
+    load();
+    render();
+
+    $("searchInput").addEventListener("input", e=>{
+      state.keyword=e.target.value;
+      $("clearSearch").classList.toggle("hidden", !state.keyword);
+      renderMenu();
+    });
+    $("clearSearch").onclick=()=>{
+      state.keyword="";
+      $("searchInput").value="";
+      $("clearSearch").classList.add("hidden");
+      renderMenu();
+    };
+    $("quickPrice").addEventListener("input", e=>{
+      e.target.value=e.target.value.replace(/[^0-9]/g,"");
+    });
+    $("quickSubmit").onclick=quickSubmit;
+    $("submitOrder").onclick=submitOrder;
+    $("clearCart").onclick=()=>{
+      state.cart={};
+      state.itemNotes={};
+      render();
+    };
+    document.querySelectorAll(".tab").forEach(btn=>{
+      btn.onclick=()=>switchTab(btn.dataset.tab);
+    });
+  </script>
+</body>
+</html>
