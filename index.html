@@ -315,24 +315,24 @@
     const TABLES = ["A1","A2","B1","B2","B3","B4","B5","B6","B7","B8","C1","C2"];
 
     const MENU = [
-      {id:"kimchi",name:"韓式泡菜",category:"下酒菜",price:90},
-      {id:"ume-tomato",name:"梅漬番茄",category:"下酒菜",price:90},
-      {id:"ankimo-ponzu",name:"洋蔥醋拌鱈魚肝",category:"下酒菜",price:140},
-      {id:"tako-wasabi",name:"山葵章魚",category:"下酒菜",price:100},
-      {id:"shiokara",name:"塩辛花枝",category:"下酒菜",price:120},
-      {id:"katsuo-tataki",name:"稻燒鰹魚刺身",category:"下酒菜",price:240},
+      {id:"kimchi",name:"韓式泡菜",category:"下酒菜 / 沙拉",price:90},
+      {id:"ume-tomato",name:"梅漬番茄",category:"下酒菜 / 沙拉",price:90},
+      {id:"ankimo-ponzu",name:"洋蔥醋拌鱈魚肝",category:"下酒菜 / 沙拉",price:140},
+      {id:"tako-wasabi",name:"山葵章魚",category:"下酒菜 / 沙拉",price:100},
+      {id:"shiokara",name:"塩辛花枝",category:"下酒菜 / 沙拉",price:120},
+      {id:"katsuo-tataki",name:"稻燒鰹魚刺身",category:"下酒菜 / 沙拉",price:240},
 
-      {id:"caesar-salad",name:"帕瑪森凱薩生菜沙拉",category:"沙拉",price:180},
-      {id:"sesame-tofu-salad",name:"胡麻豆腐生菜沙拉",category:"沙拉",price:180},
-      {id:"prosciutto-mozzarella-salad",name:"生火腿莫札瑞拉起司生菜沙拉",category:"沙拉",price:240},
+      {id:"caesar-salad",name:"帕瑪森凱薩生菜沙拉",category:"下酒菜 / 沙拉",price:180},
+      {id:"sesame-tofu-salad",name:"胡麻豆腐生菜沙拉",category:"下酒菜 / 沙拉",price:180},
+      {id:"prosciutto-mozzarella-salad",name:"生火腿莫札瑞拉起司生菜沙拉",category:"下酒菜 / 沙拉",price:240},
 
       {id:"heisei-yakisoba",name:"平成炒麵",category:"名物主食",price:220},
       {id:"matsusaka-water-lotus",name:"松阪豬炒水蓮",category:"名物主食",price:140},
       {id:"bacon-cabbage",name:"培根高麗菜",category:"名物主食",price:140},
-      {id:"okonomiyaki-seafood",name:"大阪名物御好燒－海鮮",category:"名物主食",price:250},
-      {id:"okonomiyaki-pork",name:"大阪名物御好燒－豬肉",category:"名物主食",price:250},
-      {id:"fried-rice-pork",name:"鐵板炒飯－豬肉",category:"名物主食",price:220},
-      {id:"fried-rice-beef",name:"鐵板炒飯－牛肉",category:"名物主食",price:220},
+      {id:"okonomiyaki-seafood",name:"大阪燒－海鮮",category:"名物主食",price:250},
+      {id:"okonomiyaki-pork",name:"大阪燒－豬肉",category:"名物主食",price:250},
+      {id:"fried-rice-pork",name:"炒飯－豬肉",category:"名物主食",price:220},
+      {id:"fried-rice-beef",name:"炒飯－海鮮",category:"名物主食",price:220},
       {id:"mentaiko-mochi-egg",name:"明太玉子麻糬燒",category:"名物主食",price:160},
       {id:"mentaiko-squid-ring",name:"奶油明太子魷魚圈",category:"名物主食",price:240},
 
@@ -465,6 +465,8 @@
 
 
     const VARIANT_GROUPS = [
+      {id:"group-okonomiyaki", category:"名物主食", name:"大阪燒", variants:["okonomiyaki-seafood","okonomiyaki-pork"]},
+      {id:"group-fried-rice", category:"名物主食", name:"炒飯", variants:["fried-rice-pork","fried-rice-beef"]},
       {id:"group-tantakatan", category:"日本燒酎", name:"北海道 鍛高譚紫蘇燒酎", variants:["tantakatan-glass","tantakatan-bottle"]},
       {id:"group-kannoko", category:"日本燒酎", name:"鹿兒島 神之河 麥燒酎", variants:["kannoko-glass","kannoko-bottle"]},
       {id:"group-dorogame-pink", category:"日本燒酎", name:"長崎縣 泥龜 芋燒酎", variants:["dorogame-pink-glass","dorogame-pink-bottle"]},
@@ -488,6 +490,14 @@
       return MENU.find(item => item.id === id);
     }
 
+    function variantLabel(item){
+      if(!item) return "";
+      if(item.name.includes("－")){
+        return item.name.split("－").pop();
+      }
+      return item.name;
+    }
+
     function isVariantChild(id){
       return VARIANT_GROUPS.some(group => group.variants.includes(id));
     }
@@ -500,7 +510,7 @@
       return group.variants.map(id => {
         const item = variantItem(id);
         if(!item) return "";
-        const label = item.name.includes("－杯") ? "杯" : item.name.includes("－瓶") ? "瓶" : "項目";
+        const label = variantLabel(item);
         return `${label}${money(item.price).replace("NT$","$")}`;
       }).filter(Boolean).join(" / ");
     }
@@ -620,7 +630,7 @@
     }
     function stationOf(item){
       const drinkCats = ["啤酒","日本燒酎","調酒沙瓦","日本果實酒","日本清酒","威士忌","威士忌蘇打","無酒精飲料","其他"];
-      const barCats = ["下酒菜","沙拉","名物主食","炸物","湯品"];
+      const barCats = ["下酒菜 / 沙拉","下酒菜","沙拉","名物主食","炸物","湯品"];
       const barIds = ["beef-stew","butter-mushroom","sake-clams","seafood-miso-soup","tonkotsu-veggie-soup"];
       const grillIds = ["fish-dried","hamachi-kama","salted-mackerel"];
       if(drinkCats.includes(item.category)) return "飲料單";
@@ -882,7 +892,7 @@
                   ${item.variants.map(id=>{
                     const variant = variantItem(id);
                     if(!variant) return "";
-                    const label = variant.name.includes("－杯") ? "杯" : variant.name.includes("－瓶") ? "瓶" : variant.name;
+                    const label = variantLabel(variant);
                     return `
                       <div class="variantBtn">
                         <div class="variantInfo">
@@ -898,7 +908,7 @@
                     `;
                   }).join("")}
                 </div>
-                <div class="variantHint">使用右側 ＋ / － 調整杯或瓶數量</div>
+                <div class="variantHint">使用右側 ＋ / － 調整數量</div>
               ` : ""}
             </div>
           `;
