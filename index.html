@@ -242,7 +242,7 @@
           <div class="sectionTitle">
             <b>整單備註</b>
           </div>
-          <textarea class="textarea" id="orderNote" placeholder="例如：先出酒、餐點一起上、客人趕時間、過敏提醒"></textarea>
+          
         </div>
       </section>
 
@@ -730,7 +730,7 @@
     function submitOrder(){
       const items = cartItems();
       if(!items.length) return;
-      const note = $("orderNote").value.trim();
+      const note = "";
       const no = orderNo();
       const createdAt = nowLabel();
       const createdAtMs = Date.now();
@@ -754,7 +754,6 @@
             createdAt,
             createdAtMs:createdAtMs + index,
             items:groupItems.map(item => ({...item, done:false})),
-            note,
             total:groupItems.reduce((sum,item)=>sum+Number(item.subtotal||0),0),
             status:"pending"
           };
@@ -764,7 +763,7 @@
       state.cart={};
       state.itemNotes={};
       state.cartOpen=false;
-      $("orderNote").value="";
+      ;
       save();
       switchTab("pending");
     }
@@ -942,7 +941,7 @@
       document.querySelectorAll("[data-plus]").forEach(b=>b.onclick=()=>changeQty(b.dataset.plus,1));
       document.querySelectorAll("[data-minus]").forEach(b=>b.onclick=()=>changeQty(b.dataset.minus,-1));
       document.querySelectorAll("[data-note]").forEach(inp=>{
-        inp.oninput=()=>setItemNote(inp.dataset.note, inp.value);
+        inp.oninput=()=>setItemNote(inp.dataset.inp.value);
       });
     }
 
