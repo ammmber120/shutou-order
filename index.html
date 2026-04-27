@@ -84,6 +84,12 @@
     .qtyNum{width:28px;text-align:center;font-size:20px;font-weight:950}
     .itemNote{margin-top:10px}
     .itemNote input{width:100%;border:1px solid var(--line);background:#faf7f1;border-radius:15px;padding:11px;outline:none;font-size:14px}
+    .variantBox{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .variantBtn{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f5f1ea;border:1px solid var(--line);border-radius:16px;padding:12px;font-weight:950;color:#44403c}
+    .variantBtn b{font-size:14px}
+    .variantBtn span{font-size:13px;color:var(--main)}
+    .variantHint{margin-top:8px;font-size:12px;color:var(--muted);font-weight:800}
+
     .cartFab{position:fixed;right:max(14px,calc((100vw - 520px)/2 + 14px));bottom:84px;z-index:35;display:flex;align-items:center;gap:8px;background:var(--main);color:white;border-radius:999px;padding:10px 12px;box-shadow:0 12px 28px rgba(28,25,23,.22);font-weight:950}
     .cartFabIcon{font-size:18px;line-height:1}
     .cartFabCount{display:grid;place-items:center;min-width:24px;height:24px;border-radius:999px;background:white;color:var(--main);font-size:13px;padding:0 6px}
@@ -416,6 +422,68 @@
       {id:"corkage",name:"自帶酒開瓶費",category:"其他",price:300}
     ];
 
+
+    const VARIANT_GROUPS = [
+      {id:"group-tantakatan", category:"日本燒酎", name:"北海道 鍛高譚紫蘇燒酎", variants:["tantakatan-glass","tantakatan-bottle"]},
+      {id:"group-kannoko", category:"日本燒酎", name:"鹿兒島 神之河 麥燒酎", variants:["kannoko-glass","kannoko-bottle"]},
+      {id:"group-dorogame-pink", category:"日本燒酎", name:"長崎縣 泥龜 芋燒酎", variants:["dorogame-pink-glass","dorogame-pink-bottle"]},
+      {id:"group-dorogame-mugi", category:"日本燒酎", name:"長崎縣 泥龜 麥燒酎", variants:["dorogame-mugi-glass","dorogame-mugi-bottle"]},
+      {id:"group-kuro-satsuma", category:"日本燒酎", name:"鹿兒島 黑薩摩 芋燒酎", variants:["kuro-satsuma-glass","kuro-satsuma-bottle"]},
+      {id:"group-aka-satsuma", category:"日本燒酎", name:"鹿兒島 赤薩摩 芋燒酎", variants:["aka-satsuma-glass","aka-satsuma-bottle"]},
+      {id:"group-ookubo", category:"日本燒酎", name:"鹿兒島 太久保 芋燒酎", variants:["ookubo-glass","ookubo-bottle"]},
+      {id:"group-beniotome", category:"日本燒酎", name:"福岡 紅乙女 芝麻燒酎", variants:["beniotome-glass","beniotome-bottle"]},
+
+      {id:"group-iwai", category:"威士忌", name:"岩井", variants:["iwai-glass","iwai-bottle"]},
+      {id:"group-fujimine", category:"威士忌", name:"富士嶺", variants:["fujimine-glass","fujimine-bottle"]},
+      {id:"group-asakura6", category:"威士忌", name:"朝倉6年", variants:["asakura6-glass","asakura6-bottle"]},
+      {id:"group-toki", category:"威士忌", name:"季", variants:["toki-glass","toki-bottle"]},
+      {id:"group-yamazaki", category:"威士忌", name:"山崎", variants:["yamazaki-glass","yamazaki-bottle"]},
+      {id:"group-hakushu", category:"威士忌", name:"白州", variants:["hakushu-glass","hakushu-bottle"]},
+      {id:"group-hibiki", category:"威士忌", name:"響", variants:["hibiki-glass","hibiki-bottle"]},
+      {id:"group-kaoru", category:"威士忌", name:"香薰", variants:["kaoru-glass","kaoru-bottle"]},
+    ];
+
+    function variantItem(id){
+      return MENU.find(item => item.id === id);
+    }
+
+    function isVariantChild(id){
+      return VARIANT_GROUPS.some(group => group.variants.includes(id));
+    }
+
+    function groupQty(group){
+      return group.variants.reduce((sum, id) => sum + (state.cart[id] || 0), 0);
+    }
+
+    function groupPriceText(group){
+      return group.variants.map(id => {
+        const item = variantItem(id);
+        if(!item) return "";
+        const label = item.name.includes("－杯") ? "杯" : item.name.includes("－瓶") ? "瓶" : "項目";
+        return `${label}${money(item.price).replace("NT$","$")}`;
+      }).filter(Boolean).join(" / ");
+    }
+
+    function displayMenuItems(source){
+      const grouped = [];
+      const used = new Set();
+
+      source.forEach(item => {
+        const group = VARIANT_GROUPS.find(g => g.variants.includes(item.id));
+        if(group){
+          if(!used.has(group.id)){
+            grouped.push({...group, type:"variant-group"});
+            used.add(group.id);
+          }
+        }else{
+          grouped.push(item);
+        }
+      });
+
+      return grouped;
+    }
+
+
     const STORAGE_KEY = "shutou-kushiyaki-ordering-html-v1";
     let state = {
       tab:"order",
@@ -426,6 +494,7 @@
       keyword:"",
       cart:{},
       itemNotes:{},
+      expandedGroups:{},
       orders:[]
     };
 
@@ -474,7 +543,9 @@
       const k = state.keyword.trim().toLowerCase();
       return MENU.filter(i=>{
         const mc = state.category==="全部" || i.category===state.category;
-        const mk = !k || i.name.toLowerCase().includes(k) || i.category.toLowerCase().includes(k);
+        const group = VARIANT_GROUPS.find(g => g.variants.includes(i.id));
+        const groupName = group ? group.name.toLowerCase() : "";
+        const mk = !k || i.name.toLowerCase().includes(k) || i.category.toLowerCase().includes(k) || groupName.includes(k);
         return mc && mk;
       });
     }
@@ -648,10 +719,46 @@
       });
     }
     function renderMenu(){
-      const list = filteredMenu();
+      const list = displayMenuItems(filteredMenu());
       $("menuTitle").textContent = state.category;
       $("menuCount").textContent = `共 ${list.length} 個品項`;
       $("menuList").innerHTML = list.map(item=>{
+        if(item.type === "variant-group"){
+          const qty = groupQty(item);
+          const expanded = !!state.expandedGroups[item.id];
+          return `
+            <div class="item ${qty>0?'selected':''}">
+              <div class="itemTop">
+                <div class="itemInfo">
+                  <div class="tag">${item.category}</div>
+                  <div class="itemName">${item.name}</div>
+                  <div class="price">${groupPriceText(item)}</div>
+                </div>
+                <div class="qty">
+                  <div class="qtyNum">${qty}</div>
+                  <button class="qtyBtn plus" data-group="${item.id}">${expanded ? "−" : "+"}</button>
+                </div>
+              </div>
+              ${expanded ? `
+                <div class="variantBox">
+                  ${item.variants.map(id=>{
+                    const variant = variantItem(id);
+                    if(!variant) return "";
+                    const label = variant.name.includes("－杯") ? "杯" : variant.name.includes("－瓶") ? "瓶" : variant.name;
+                    return `
+                      <button class="variantBtn" data-plus="${id}">
+                        <b>${label}</b>
+                        <span>${money(variant.price)}</span>
+                      </button>
+                    `;
+                  }).join("")}
+                </div>
+                <div class="variantHint">點「杯」或「瓶」即可加入本次點單</div>
+              ` : ""}
+            </div>
+          `;
+        }
+
         const qty = state.cart[item.id]||0;
         return `
           <div class="item ${qty>0?'selected':''}">
@@ -671,12 +778,20 @@
           </div>
         `;
       }).join("");
+
+      document.querySelectorAll("[data-group]").forEach(b=>{
+        b.onclick=()=>{
+          state.expandedGroups[b.dataset.group] = !state.expandedGroups[b.dataset.group];
+          renderMenu();
+        };
+      });
       document.querySelectorAll("[data-plus]").forEach(b=>b.onclick=()=>changeQty(b.dataset.plus,1));
       document.querySelectorAll("[data-minus]").forEach(b=>b.onclick=()=>changeQty(b.dataset.minus,-1));
       document.querySelectorAll("[data-note]").forEach(inp=>{
         inp.oninput=()=>setItemNote(inp.dataset.note, inp.value);
       });
     }
+
     function renderCart(){
       const items = cartItems();
       const qty = items.reduce((s,i)=>s+i.qty,0);
