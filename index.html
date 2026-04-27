@@ -240,13 +240,7 @@
 
         <div class="card">
           <div class="sectionTitle">
-            <b>整單備註</b>
-          </div>
-          
-        </div>
-      </section>
-
-      <section id="pagePending" class="hidden"></section>
+            <section id="pagePending" class="hidden"></section>
       <section id="pageHistory" class="hidden"></section>
     </main>
 
@@ -713,7 +707,7 @@
       });
       lines.push(`---`);
       lines.push(`合計：${money(order.total)}`);
-      if(order.note) lines.push(`整單備註：${order.note}`);
+      if(order.note) lines.push(`：${order.note}`);
       return lines.join("\\n");
     }
     async function copyOrder(id){
@@ -1061,8 +1055,7 @@
               `;
             }).join("")}
           </div>
-          ${order.note ? `<div class="orderNote"><b>整單備註：</b>${escapeHtml(order.note)}</div>` : ""}
-          <div class="orderActions">
+          ${order.note ? `<div class="orderNote"><div class="orderActions">
             ${history
               ? `<button class="restoreBtn" data-restore="${order.id}">還原</button>`
               : `<button class="doneBtn" data-done="${order.id}">完成</button>`
