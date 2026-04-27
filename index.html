@@ -344,10 +344,10 @@
       {id:"fried-chicken-skin",name:"唐揚雞皮",category:"炸物",price:140},
       {id:"fried-cartilage",name:"酥炸雞軟骨",category:"炸物",price:160},
 
-      {id:"beef-short-rib-yuzu",name:"柚香牛小排",category:"串燒－牛 / 野菜",price:100},
-      {id:"wagyu-harami",name:"和牛橫膈膜",category:"串燒－牛 / 野菜",price:120},
-      {id:"garlic-beef-rib",name:"蒜香牛肋條",category:"串燒－牛 / 野菜",price:90},
-      {id:"beef-tongue-scallion",name:"蔥塩牛舌",category:"串燒－牛 / 野菜",price:90},
+      {id:"beef-short-rib-yuzu",name:"柚香牛小排",category:"串燒－牛",price:100},
+      {id:"wagyu-harami",name:"和牛橫膈膜",category:"串燒－牛",price:120},
+      {id:"garlic-beef-rib",name:"蒜香牛肋條",category:"串燒－牛",price:90},
+      {id:"beef-tongue-scallion",name:"蔥塩牛舌",category:"串燒－牛",price:90},
 
       {id:"chicken-negi",name:"雞肉蔥串",category:"串燒－雞",price:80},
       {id:"chicken-wing",name:"雞翅",category:"串燒－雞",price:80},
@@ -367,11 +367,11 @@
       {id:"bacon-grape",name:"培根葡萄捲",category:"串燒－豚",price:60},
       {id:"bacon-tomato",name:"培根蕃茄捲",category:"串燒－豚",price:60},
 
-      {id:"zucchini",name:"櫛瓜",category:"串燒－牛 / 野菜",price:50},
-      {id:"green-pepper",name:"青龍椒",category:"串燒－牛 / 野菜",price:40},
-      {id:"okra",name:"秋葵",category:"串燒－牛 / 野菜",price:50},
-      {id:"mentaiko-yam",name:"明太子山藥",category:"串燒－牛 / 野菜",price:90},
-      {id:"mushroom",name:"蘑菇",category:"串燒－牛 / 野菜",price:60},
+      {id:"zucchini",name:"櫛瓜",category:"串燒－野菜",price:50},
+      {id:"green-pepper",name:"青龍椒",category:"串燒－野菜",price:40},
+      {id:"okra",name:"秋葵",category:"串燒－野菜",price:50},
+      {id:"mentaiko-yam",name:"明太子山藥",category:"串燒－野菜",price:90},
+      {id:"mushroom",name:"蘑菇",category:"串燒－野菜",price:60},
 
       {id:"fish-dried",name:"午仔魚一夜干",category:"特色料理 / 湯品",price:300},
       {id:"hamachi-kama",name:"鹿兒島紅魽下巴",category:"特色料理 / 湯品",price:350},
@@ -461,6 +461,11 @@
     ];
 
     const VARIANT_GROUPS = [
+      {id:"group-white-beer", category:"啤酒", name:"白啤", variants:["white-beer-m","white-beer-l"]},
+      {id:"group-black-beer", category:"啤酒", name:"黑啤", variants:["black-beer-m","black-beer-l"]},
+      {id:"group-special-beer", category:"啤酒", name:"特調", variants:["special-beer-m","special-beer-l"]},
+      {id:"group-ale-beer", category:"啤酒", name:"艾爾", variants:["ale-beer-m","ale-beer-l"]},
+
       {id:"group-okonomiyaki", category:"名物主食", name:"大阪燒", variants:["okonomiyaki-seafood","okonomiyaki-pork"]},
       {id:"group-fried-rice", category:"名物主食", name:"炒飯", variants:["fried-rice-pork","fried-rice-beef"]},
       {id:"group-tantakatan", category:"日本燒酎", name:"北海道 鍛高譚紫蘇燒酎", variants:["tantakatan-glass","tantakatan-bottle"]},
