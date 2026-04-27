@@ -31,6 +31,8 @@
     .countBox{background:var(--dark);color:white;border-radius:18px;padding:10px 14px;text-align:center;min-width:76px}
     .countBox small{display:block;color:#d6d3d1;font-size:11px}
     .countBox b{font-size:24px}
+    .staffBox{margin-top:8px;display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--main);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:950}
+    .staffBox button{background:transparent;color:var(--main);padding:0;font-size:12px;font-weight:950;text-decoration:underline}
     main{padding:14px;display:flex;flex-direction:column;gap:14px}
     .card{background:rgba(255,250,243,.94);border:1px solid var(--line);border-radius:26px;padding:14px;box-shadow:0 6px 18px rgba(28,25,23,.04)}
     .sectionTitle{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -170,6 +172,7 @@
         <div>
           <div class="brand">手刀串燒</div>
           <h1>手機點餐紀錄</h1>
+          <div class="staffBox">點單人：<span id="staffNameLabel">外場</span><button id="changeStaffName" type="button">更換</button></div>
         </div>
         <div class="countBox">
           <small>未出餐</small>
@@ -283,7 +286,32 @@
 
   <div class="toast hidden" id="toast">已複製</div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCYm2N5NNCRk3fl-87KhREAXfavxJdlpIc",
+      authDomain: "shutou-order.firebaseapp.com",
+      databaseURL: "https://shutou-order-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "shutou-order",
+      storageBucket: "shutou-order.firebasestorage.app",
+      messagingSenderId: "191702351962",
+      appId: "1:191702351962:web:c672a8112d1b562fed5863"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const db = getDatabase(firebaseApp);
+    const ORDERS_PATH = "shutou/orders";
+    const ordersRef = ref(db, ORDERS_PATH);
+
+    let firebaseReady = false;
+    let staffName = localStorage.getItem("shutou-staff-name") || "";
+    if(!staffName){
+      staffName = prompt("請輸入你的名字（例如：Amber / 外場1 / 外場2）") || "外場";
+      localStorage.setItem("shutou-staff-name", staffName);
+    }
+
     const TABLES = ["A1","A2","B1","B2","B3","B4","B5","B6","B7","B8","C1","C2"];
 
     const MENU = [
@@ -513,19 +541,67 @@
 
     const $ = (id)=>document.getElementById(id);
 
+    function normalizeOrders(data){
+      if(!data) return [];
+      const arr = Array.isArray(data) ? data.filter(Boolean) : Object.entries(data).map(([key, value]) => ({ firebaseKey:key, ...value }));
+      return arr
+        .map(o => ({
+          ...o,
+          id: o.id || o.firebaseKey || `ORD-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          station: o.station || stationOf(o.items?.[0] || {}) || "未分類",
+          items: Array.isArray(o.items) ? o.items.map(item => ({...item, done: !!item.done})) : [],
+          createdAtMs: Number(o.createdAtMs || 0)
+        }))
+        .sort((a,b)=>(b.createdAtMs || 0) - (a.createdAtMs || 0));
+    }
     function load(){
       try{
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");
-        if(Array.isArray(saved.orders)) {
-          state.orders = saved.orders.map(o => ({
+        const backup = JSON.parse(localStorage.getItem(STORAGE_KEY)||"{}");
+        if(Array.isArray(backup.orders)) {
+          state.orders = backup.orders.map(o => ({
             ...o,
-            station: o.station || stationOf(o.items?.[0] || {}) || "未分類"
+            station: o.station || stationOf(o.items?.[0] || {}) || "未分類",
+            items: Array.isArray(o.items) ? o.items.map(item => ({...item, done: !!item.done})) : []
           }));
         }
       }catch(e){}
+
+      onValue(ordersRef, snapshot=>{
+        firebaseReady = true;
+        state.orders = normalizeOrders(snapshot.val());
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({orders:state.orders}));
+        render();
+      }, error=>{
+        console.error(error);
+        showToast("同步連線失敗，請檢查網路");
+      });
     }
     function save(){
       localStorage.setItem(STORAGE_KEY, JSON.stringify({orders:state.orders}));
+    }
+    function firebaseOrderRef(id){
+      return ref(db, `${ORDERS_PATH}/${id}`);
+    }
+    function syncOrder(order){
+      save();
+      return set(firebaseOrderRef(order.id), order).catch(error=>{
+        console.error(error);
+        showToast("同步失敗，請檢查網路");
+      });
+    }
+    function syncDeleteOrder(id){
+      save();
+      return remove(firebaseOrderRef(id)).catch(error=>{
+        console.error(error);
+        showToast("刪除同步失敗");
+      });
+    }
+    function syncClearOrders(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({orders:[]}));
+      return remove(ordersRef).catch(error=>{
+        console.error(error);
+        showToast("清空同步失敗");
+      });
     }
     function money(n){
       n = Number(n||0);
@@ -618,6 +694,7 @@
       lines.push(`手刀串燒 點餐`);
       lines.push(`桌號：${order.tableNo}`);
       lines.push(`單別：${order.station || "未分類"}`);
+      if(order.staff) lines.push(`點單人：${order.staff}`);
       lines.push(`單號：#${order.no}`);
       lines.push(`時間：${order.createdAt}`);
       lines.push(`---`);
@@ -647,6 +724,7 @@
       const note = $("orderNote").value.trim();
       const no = orderNo();
       const createdAt = nowLabel();
+      const createdAtMs = Date.now();
       const stationOrder = ["烤台單","吧檯單","飲料單"];
       const groups = {};
       items.forEach(item => {
@@ -659,18 +737,21 @@
         .map((station, index) => {
           const groupItems = groups[station];
           return {
-            id:`ORD-${Date.now()}-${index}`,
+            id:`ORD-${createdAtMs}-${index}-${Math.random().toString(16).slice(2)}`,
             no,
             station,
             tableNo:state.table,
+            staff:staffName,
             createdAt,
-            items:groupItems,
+            createdAtMs:createdAtMs + index,
+            items:groupItems.map(item => ({...item, done:false})),
             note,
             total:groupItems.reduce((sum,item)=>sum+Number(item.subtotal||0),0),
             status:"pending"
           };
         });
       state.orders = [...newOrders, ...state.orders];
+      newOrders.forEach(order => syncOrder(order));
       state.cart={};
       state.itemNotes={};
       state.cartOpen=false;
@@ -684,29 +765,40 @@
       const station = $("quickStation")?.value || "吧檯單";
       if(!name){showToast("請輸入品項");return}
       const item = {id:"custom-"+Date.now(), name, category:"臨時加點", station, price, qty:1, note:"", subtotal:price};
+      const createdAtMs = Date.now();
       const order = {
-        id:"Q-"+Date.now(),
+        id:"Q-"+createdAtMs+"-"+Math.random().toString(16).slice(2),
         no:orderNo(),
         station,
         tableNo:state.table,
+        staff:staffName,
         createdAt:nowLabel(),
+        createdAtMs,
         items:[{...item, done:false}],
         note:"臨時加點",
         total:price,
         status:"pending"
       };
       state.orders.unshift(order);
+      syncOrder(order);
       $("quickName").value="";
       $("quickPrice").value="";
       save();
       switchTab("pending");
     }
     function markDone(id){
-      state.orders = state.orders.map(o=>o.id===id ? {...o,status:"done",doneAt:nowLabel(),items:o.items.map(item=>({...item,done:true}))} : o);
+      let changed = null;
+      state.orders = state.orders.map(o=>{
+        if(o.id!==id) return o;
+        changed = {...o,status:"done",doneAt:nowLabel(),items:o.items.map(item=>({...item,done:true}))};
+        return changed;
+      });
+      if(changed) syncOrder(changed);
       save();
       render();
     }
     function toggleItemDone(orderId, itemKey){
+      let changed = null;
       state.orders = state.orders.map(order=>{
         if(order.id !== orderId) return order;
         const items = order.items.map((item, index)=>{
@@ -715,31 +807,40 @@
           return {...item, done:!item.done};
         });
         const allDone = items.length > 0 && items.every(item=>item.done);
-        return {
+        changed = {
           ...order,
           items,
           status: allDone ? "done" : "pending",
           doneAt: allDone ? nowLabel() : ""
         };
+        return changed;
       });
+      if(changed) syncOrder(changed);
       save();
       render();
     }
     function restoreOrder(id){
-      state.orders = state.orders.map(o=>o.id===id ? {...o,status:"pending",doneAt:"",items:o.items.map(item=>({...item,done:false}))} : o);
+      let changed = null;
+      state.orders = state.orders.map(o=>{
+        if(o.id!==id) return o;
+        changed = {...o,status:"pending",doneAt:"",items:o.items.map(item=>({...item,done:false}))};
+        return changed;
+      });
+      if(changed) syncOrder(changed);
       save();
       render();
     }
     function deleteOrder(id){
       if(!confirm("確定刪除這張訂單嗎？")) return;
       state.orders = state.orders.filter(o=>o.id!==id);
+      syncDeleteOrder(id);
       save();
       render();
     }
     function clearAllOrders(){
       if(!confirm("確定要清空全部訂單紀錄嗎？這個動作無法復原。")) return;
       state.orders=[];
-      save();
+      syncClearOrders();
       render();
     }
     function renderTables(){
@@ -931,7 +1032,7 @@
           <div class="orderTop">
             <div>
               <span class="tableBadge">${order.tableNo}</span><span class="stationBadge">${order.station || "未分類"}</span>
-              <div class="meta">#${order.no}｜建立：${order.createdAt}${order.doneAt ? "｜完成："+order.doneAt : ""}</div>
+              <div class="meta">#${order.no}｜${order.staff ? "點單："+escapeHtml(order.staff)+"｜" : ""}建立：${order.createdAt}${order.doneAt ? "｜完成："+order.doneAt : ""}</div>
             </div>
             <div class="orderTotal">${money(order.total)}</div>
           </div>
@@ -991,6 +1092,16 @@
 
     load();
     render();
+    $("staffNameLabel").textContent = staffName;
+    $("changeStaffName").onclick=()=>{
+      const next = prompt("請輸入你的名字（例如：Amber / 外場1 / 外場2）", staffName);
+      if(next && next.trim()){
+        staffName = next.trim();
+        localStorage.setItem("shutou-staff-name", staffName);
+        $("staffNameLabel").textContent = staffName;
+        showToast("點單人已更新");
+      }
+    };
 
     $("searchInput").addEventListener("input", e=>{
       state.keyword=e.target.value;
