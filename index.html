@@ -651,8 +651,66 @@
       const idx = MENU.findIndex(menuItem => menuItem.id === item.id);
       return idx === -1 ? 9999 : idx;
     }
+    function stationCategoryRank(item){
+      const station = item.station || stationOf(item);
+      const category = item.category || "";
+
+      // 吧檯單出單順序：下酒菜/沙拉 > 名物主食 > 炸物 > 一品料理/湯品
+      if(station === "吧檯單"){
+        const barOrder = {
+          "下酒菜 / 沙拉": 1,
+          "下酒菜": 1,
+          "沙拉": 1,
+          "名物主食": 2,
+          "炸物": 3,
+          "特色料理 / 湯品": 4,
+          "特色料理": 4,
+          "湯品": 4,
+          "臨時加點": 99
+        };
+        return barOrder[category] || 98;
+      }
+
+      // 烤台單出單順序：牛 > 雞 > 豚 > 野菜 > 烤魚/一品
+      if(station === "烤台單"){
+        const grillOrder = {
+          "串燒－牛": 1,
+          "串燒－雞": 2,
+          "串燒－豚": 3,
+          "串燒－野菜": 4,
+          "特色料理 / 湯品": 5,
+          "特色料理": 5,
+          "臨時加點": 99
+        };
+        return grillOrder[category] || 98;
+      }
+
+      // 飲料單出單順序：啤酒 > 燒酎 > 調酒 > 果實酒/清酒 > 威士忌 > Highball > 無酒精 > 其他
+      if(station === "飲料單"){
+        const drinkOrder = {
+          "啤酒": 1,
+          "日本燒酎": 2,
+          "調酒沙瓦": 3,
+          "果實酒 / 清酒": 4,
+          "日本果實酒": 4,
+          "日本清酒": 4,
+          "威士忌": 5,
+          "威士忌蘇打": 6,
+          "無酒精飲料": 7,
+          "其他": 8,
+          "臨時加點": 99
+        };
+        return drinkOrder[category] || 98;
+      }
+
+      return 98;
+    }
     function sortItemsByMenuOrder(items){
-      return [...items].sort((a,b) => menuSortIndex(a) - menuSortIndex(b));
+      return [...items].sort((a,b) => {
+        const rankDiff = stationCategoryRank(a) - stationCategoryRank(b);
+        if(rankDiff !== 0) return rankDiff;
+        return menuSortIndex(a) - menuSortIndex(b);
+      });
     }
     function pendingOrders(){
       return state.orders.filter(o=>o.status==="pending");
