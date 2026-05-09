@@ -647,6 +647,13 @@
     function cartTotal(){
       return cartItems().reduce((s,i)=>s+i.subtotal,0);
     }
+    function menuSortIndex(item){
+      const idx = MENU.findIndex(menuItem => menuItem.id === item.id);
+      return idx === -1 ? 9999 : idx;
+    }
+    function sortItemsByMenuOrder(items){
+      return [...items].sort((a,b) => menuSortIndex(a) - menuSortIndex(b));
+    }
     function pendingOrders(){
       return state.orders.filter(o=>o.status==="pending");
     }
@@ -733,7 +740,7 @@
       const newOrders = stationOrder
         .filter(station => groups[station]?.length)
         .map((station, index) => {
-          const groupItems = groups[station];
+          const groupItems = sortItemsByMenuOrder(groups[station]);
           return {
             id:`ORD-${createdAtMs}-${index}-${Math.random().toString(16).slice(2)}`,
             no,
@@ -1035,8 +1042,8 @@
             <div class="orderTotal">${money(order.total)}</div>
           </div>
           <div class="orderItems">
-            ${order.items.map((i,index)=>{
-              const itemKey = `${i.id}-${index}`;
+            ${sortItemsByMenuOrder(order.items.map((item, originalIndex)=>({...item, originalIndex}))).map((i,index)=>{
+              const itemKey = `${i.id}-${i.originalIndex ?? index}`;
               const isDone = !!i.done || history;
               return `
                 <div class="orderLine ${isDone ? "done" : ""}">
