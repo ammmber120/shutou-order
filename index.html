@@ -621,9 +621,10 @@
       const barCats = ["下酒菜 / 沙拉","下酒菜","沙拉","名物主食","炸物","特色料理 / 湯品","湯品"];
       const barIds = ["beef-stew","butter-mushroom","sake-clams","seafood-miso-soup","tonkotsu-veggie-soup"];
       const grillIds = ["fish-dried","hamachi-kama","salted-mackerel"];
+
       if(drinkCats.includes(item.category)) return "飲料單";
-      if(barCats.includes(item.category) || barIds.includes(item.id)) return "吧檯單";
       if((item.category || "").startsWith("串燒") || grillIds.includes(item.id)) return "烤台單";
+      if(barCats.includes(item.category) || barIds.includes(item.id)) return "吧檯單";
       return "吧檯單";
     }
     function filteredMenu(){
